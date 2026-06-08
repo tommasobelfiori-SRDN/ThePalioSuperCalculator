@@ -361,8 +361,11 @@ const FIREBASE_CONFIG = {
 const CLOUD_PATH = 'palio2026';
 // SHA-256 della password admin (nel sorgente c'è solo l'hash, non la password)
 const ADMIN_HASH = '1d6f1c6e5cadfe038e46365ac26fbbfb8323af3e23ad4d5665ae020dee3b117f';
+const DEFAULT_WAIT_MSG = 'Torna Sabato sera per scoprire i risultati dopo la prima giornata di gare!';
 
 let db=null, cloudOn=false, cloudConnected=false, applyingRemote=false, cloudInited=false;
+let publicData = null;   // contenuto del nodo /public (messaggio + snapshot pubblicato)
+let liveState = null;    // ultimo stato live ricevuto (per quando un visitatore diventa admin)
 const myId = 'c'+Math.random().toString(36).slice(2,10);
 let isAdmin = false;
 // se il cloud è attivo si modifica solo da admin; in locale (senza cloud) si modifica liberamente
@@ -386,23 +389,27 @@ function initCloud(){
     db = firebase.database();
     cloudOn = true;
     db.ref('.info/connected').on('value', s=>{ cloudConnected=(s.val()===true); updateTopbar(); });
+    // STATO LIVE (dati di lavoro): sincronizzato e visibile solo agli admin
     db.ref(CLOUD_PATH+'/state').on('value', snap=>{
       const remote = snap.val();
-      if(remote && remote.data){
-        if(remote.updatedBy === myId) return;           // è il nostro stesso aggiornamento (eco)
-        const s = migrate(normalizeState(remote.data));
-        if(s){
-          applyingRemote = true;
-          state = s;
-          saveLocal();                                  // backup locale
-          render();
-          if(document.getElementById('present').classList.contains('on')) renderPresent();
-          applyingRemote = false;
-        }
-      } else if(isAdmin){
-        pushCloud();                                     // database vuoto: l'admin lo inizializza
+      if(!(remote && remote.data)){ if(isAdmin) pushCloud(); return; } // vuoto: l'admin lo inizializza
+      if(remote.updatedBy === myId) return;             // eco del nostro stesso aggiornamento
+      const s = migrate(normalizeState(remote.data));
+      if(!s) return;
+      liveState = s;                                    // memorizza sempre l'ultimo live
+      if(isAdmin){                                      // ma lo mostra solo l'admin
+        applyingRemote = true;
+        state = s; saveLocal(); render();
+        if(document.getElementById('present').classList.contains('on')) renderPresent();
+        applyingRemote = false;
       }
-    }, err=>console.warn('cloud read err', err));
+    }, err=>console.warn('cloud state err', err));
+    // PUBBLICAZIONE (snapshot congelato per il pubblico)
+    db.ref(CLOUD_PATH+'/public').on('value', snap=>{
+      publicData = snap.val();
+      if(!isAdmin){ render(); if(document.getElementById('present').classList.contains('on')) renderPresent(); }
+      else if(current==='config'){ render(); }          // aggiorna lo stato del pannello pubblicazione
+    }, err=>console.warn('cloud public err', err));
   }catch(e){ cloudOn=false; console.warn('cloud init fail', e); }
   updateTopbar();
 }
@@ -415,6 +422,33 @@ function pushCloud(){
       data: state, updatedBy: myId, updatedAt: firebase.database.ServerValue.TIMESTAMP
     }).catch(e=>console.warn('cloud write err', e));
   }, 250);
+}
+// --- pubblicazione classifiche al pubblico (snapshot, non realtime) ---
+function publishReveal(){
+  if(!cloudOn || !isAdmin || !db) return;
+  db.ref(CLOUD_PATH+'/public').update({
+    revealed:true, snapshot: state, at: firebase.database.ServerValue.TIMESTAMP
+  }).catch(e=>console.warn('reveal err',e));
+}
+function publishHide(){
+  if(!cloudOn || !isAdmin || !db) return;
+  db.ref(CLOUD_PATH+'/public').update({ revealed:false }).catch(e=>console.warn('hide err',e));
+}
+function publishField(field, value){
+  if(!cloudOn || !isAdmin || !db) return;
+  const o={}; o[field]=value;
+  db.ref(CLOUD_PATH+'/public').update(o).catch(e=>console.warn('pubfield err',e));
+}
+function fmtTime(ms){ try{ return new Date(ms).toLocaleString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+// firma dei risultati per capire se ci sono modifiche non pubblicate
+function resultsSig(s){
+  if(!s||!s.gare) return '';
+  const posSig = p => Object.keys(p||{}).filter(k=>p[k]!=null).sort().map(k=>k+'='+p[k]).join(',');
+  return JSON.stringify({
+    g: s.gare.map(x=>x.id+'|'+x.tipo+'|'+posSig(x.pos)),
+    t: s.tabellaPunti,
+    c: (s.contrade||[]).map(c=>c.id+'='+c.coeff)
+  });
 }
 
 async function sha256(str){
@@ -432,8 +466,13 @@ async function promptAdmin(){
   if(pw==null) return;
   if(await sha256(pw) === ADMIN_HASH){
     isAdmin=true; localStorage.setItem('palioAdmin','1');
+    if(liveState) state = liveState;                 // mostra subito l'ultimo stato live noto
     updateTopbar(); render(); badge('ok');
-    if(cloudOn && db) db.ref(CLOUD_PATH+'/state').once('value').then(s=>{ if(!(s.val()&&s.val().data)) pushCloud(); });
+    if(cloudOn && db) db.ref(CLOUD_PATH+'/state').once('value').then(s=>{
+      const v=s.val();
+      if(v && v.data){ const st=migrate(normalizeState(v.data)); if(st){ state=st; render(); } }
+      else pushCloud();                               // database vuoto: inizializza coi dati locali
+    });
   } else {
     alert('Password errata.');
   }
@@ -530,6 +569,8 @@ function renderNav(){
 }
 
 function render(){
+  if(cloudOn && !isAdmin){ renderViewer(); return; }   // area pubblica
+  document.getElementById('nav').style.display='';
   renderNav();
   const app = document.getElementById('app');
   const prevScroll = (current==='gare') ? scrollPosOfMatrix() : 0;
@@ -544,6 +585,38 @@ function render(){
 let _matrixScroll = 0;
 function scrollPosOfMatrix(){ const w=document.querySelector('.matrix-wrap'); return w?w.scrollLeft:0; }
 function restoreMatrixScroll(x){ const w=document.querySelector('.matrix-wrap'); if(w) w.scrollLeft=x; }
+
+/* ===================== VISTA PUBBLICA (visitatori) ===================== */
+function renderViewer(){
+  const nav = document.getElementById('nav'), app = document.getElementById('app');
+  const allowed = ['palio','drappo','grafici'];
+  if(!publicData || publicData.revealed!==true){
+    nav.style.display='none';
+    app.innerHTML = viewWait(publicData && publicData.message);
+    return;
+  }
+  // usa lo snapshot pubblicato (congelato) per i calcoli
+  const snap = migrate(normalizeState(JSON.parse(JSON.stringify(publicData.snapshot||{}))));
+  if(snap) state = snap;
+  if(!allowed.includes(current)) current='palio';
+  nav.style.display='';
+  nav.innerHTML = VIEWS.filter(v=>allowed.includes(v.id)).map(v=>
+    `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`).join('');
+  const lab = publicData.label && publicData.label.trim() ? publicData.label : 'Classifica ufficiale';
+  const at = publicData.at ? (' · aggiornata al '+fmtTime(publicData.at)) : '';
+  const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b>${at}</div>`;
+  if(current==='palio')       app.innerHTML = banner+viewClassifica('palio');
+  else if(current==='drappo') app.innerHTML = banner+viewClassifica('drappo');
+  else if(current==='grafici')app.innerHTML = banner+viewGrafici();
+  if(current==='grafici') drawCharts();
+}
+function viewWait(msg){
+  return `<div class="card" style="text-align:center; padding:56px 22px">
+    <div style="font-size:3.6rem; line-height:1">🏆</div>
+    <h2 style="color:var(--accent); font-size:clamp(1.3rem,3.2vw,2rem); margin:16px auto 10px; max-width:680px">${esc(msg||DEFAULT_WAIT_MSG)}</h2>
+    <p class="muted">Le classifiche saranno svelate dall'organizzazione. Tieni d'occhio questa pagina!</p>
+  </div>`;
+}
 
 /* ===================== VISTA: GARE & INSERIMENTO ===================== */
 function viewGare(){
@@ -722,8 +795,40 @@ function niceStep(x){
 }
 
 /* ===================== VISTA: IMPOSTAZIONI ===================== */
+function buildPubCard(){
+  if(!cloudOn) return '';
+  const pd = publicData||{};
+  const revealed = pd.revealed===true;
+  let changed=false;
+  if(revealed && pd.snapshot){
+    const snap = migrate(normalizeState(JSON.parse(JSON.stringify(pd.snapshot))));
+    changed = snap && (resultsSig(state)!==resultsSig(snap));
+  }
+  const msg = (pd.message!=null) ? pd.message : DEFAULT_WAIT_MSG;
+  const status = revealed
+    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Pubblicate${pd.at?(' · '+fmtTime(pd.at)):''}</span>`
+    : `<span class="pill" style="border-color:var(--warn);color:var(--warn)">🙈 Nascoste</span>`;
+  const changedNote = changed
+    ? `<div class="banner">⚠ Ci sono modifiche <b>non ancora pubblicate</b>: il pubblico vede la classifica precedente. Premi "Pubblica" per aggiornarla.</div>` : '';
+  const inp = 'width:100%;max-width:520px;background:var(--bg-1);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px';
+  return `<div class="card">
+    <div class="sectionTitle"><h2>Pubblicazione classifiche (pubblico)</h2> ${status}</div>
+    ${changedNote}
+    <p class="hint">Il pubblico <b>non</b> vede i risultati in tempo reale. Quando premi <b>Pubblica</b>, vede una <b>fotografia</b> delle classifiche di quel momento; le modifiche successive restano private finché non pubblichi di nuovo.</p>
+    <div class="row" style="margin:12px 0">
+      <button class="btn gold" data-action="pub-reveal">📢 Pubblica classifiche ora</button>
+      <button class="btn" data-action="pub-hide">🙈 Nascondi (mostra messaggio)</button>
+    </div>
+    <label class="hint" style="display:block;margin-top:6px">Etichetta sopra la classifica pubblicata (es. "Classifica dopo la 1ª giornata"):</label>
+    <input data-action="pub-label" value="${esc(pd.label||'')}" placeholder="Classifica ufficiale" style="${inp};margin:5px 0 14px">
+    <label class="hint" style="display:block">Messaggio mostrato al pubblico quando le classifiche sono nascoste:</label>
+    <textarea data-action="pub-message" rows="2" style="${inp};margin-top:5px">${esc(msg)}</textarea>
+  </div>`;
+}
+
 function viewConfig(){
   const C = state.contrade;
+  const pubCard = buildPubCard();
   const contRows = C.map(c=>`<tr>
     <td><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}" ${ED()}></td>
     <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}" ${ED()}></td>
@@ -755,6 +860,7 @@ function viewConfig(){
   }).join('');
 
   return `
+  ${pubCard}
   <div class="grid2">
     <div class="card">
       <div class="sectionTitle"><h2>Contrade &amp; Coefficienti</h2></div>
@@ -907,7 +1013,7 @@ document.addEventListener('click', e=>{
   const t = e.target.closest('[data-action]');
   if(!t) return;
   const a = t.dataset.action;
-  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json'].includes(a) && !canEdit()) return;
+  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json','pub-reveal','pub-hide'].includes(a) && !canEdit()) return;
   switch(a){
     case 'nav':
       if(t.dataset.view==='present'){ openPresent(); return; }
@@ -915,6 +1021,12 @@ document.addEventListener('click', e=>{
       break;
     case 'present-close': closePresent(); break;
     case 'present-mode': presentMode = t.dataset.mode; renderPresent(); break;
+    case 'pub-reveal':
+      if(confirm('Pubblicare ORA le classifiche attuali?\n\nIl pubblico vedrà questa fotografia (congelata) finché non pubblichi di nuovo.')) publishReveal();
+      break;
+    case 'pub-hide':
+      if(confirm('Nascondere le classifiche al pubblico?\n\nTornerà a vedere il messaggio di attesa.')) publishHide();
+      break;
     case 'export-json': exportJSON(); break;
     case 'export-csv': exportCSV(); break;
     case 'import-json': importJSON(); break;
@@ -949,7 +1061,9 @@ document.addEventListener('change', e=>{
   const t = e.target.closest('[data-action]');
   if(!t) return;
   const a = t.dataset.action;
-  if(['pos','tipo','cfg-cont','cfg-punti','cfg-gara'].includes(a) && !canEdit()){ render(); return; }
+  if(['pos','tipo','cfg-cont','cfg-punti','cfg-gara','pub-label','pub-message'].includes(a) && !canEdit()){ render(); return; }
+  if(a==='pub-label'){ publishField('label', t.value); return; }
+  if(a==='pub-message'){ publishField('message', t.value); return; }
   if(a==='pos'){
     const g = findGara(t.dataset.gid);
     g.pos[t.dataset.cid] = t.value==='' ? null : parseInt(t.value,10);
