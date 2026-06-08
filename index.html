@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palio 2026 – Calcolo Punteggio</title>
+<style>
+  :root{
+    --bg-1:#0d1117; --bg-2:#161b22; --bg-3:#1f2630; --bg-4:#2a3240;
+    --border:#30363d; --text:#e6edf3; --text-dim:#8b949e;
+    --accent:#d4af37; --accent-2:#f2c94c; --success:#2ea043; --danger:#da3633; --warn:#d29922;
+    /* colori ufficiali contrade (riusati dalla companion app) */
+    --andromeda:#9ca3af; --bosco:#f97316; --giardini:#16a34a; --lago:#1e40af; --sagittario:#ec4899;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #18202c 0%, var(--bg-1) 60%);
+    color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif}
+  a{color:var(--accent)}
+  /* ---------- header ---------- */
+  header{
+    padding:18px 20px 14px; text-align:center; position:relative;
+    border-bottom:2px solid var(--accent); background:linear-gradient(180deg,#10161f,#0d1117);
+  }
+  header h1{
+    margin:0; font-size:1.7rem; letter-spacing:3px;
+    background:linear-gradient(180deg,var(--accent-2),var(--accent)); -webkit-background-clip:text;
+    background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  header p{margin:4px 0 0; color:var(--text-dim); letter-spacing:4px; font-size:.72rem; text-transform:uppercase}
+  #saveBadge{
+    position:absolute; right:16px; top:16px; font-size:.72rem; padding:4px 10px; border-radius:20px;
+    border:1px solid var(--border); color:var(--text-dim); background:var(--bg-2); transition:.3s;
+  }
+  #saveBadge.ok{color:var(--success); border-color:var(--success)}
+  #saveBadge.warn{color:var(--warn); border-color:var(--warn)}
+  /* ---------- nav ---------- */
+  nav{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:12px;
+    position:sticky; top:0; z-index:30; background:rgba(13,17,23,.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--border);
+  }
+  nav button{
+    background:var(--bg-2); color:var(--text-dim); border:1px solid var(--border);
+    padding:9px 16px; border-radius:10px; cursor:pointer; font-size:.85rem; font-weight:600;
+    letter-spacing:.5px; transition:.15s;
+  }
+  nav button:hover{color:var(--text); border-color:var(--accent)}
+  nav button.active{
+    color:#1a1205; background:linear-gradient(180deg,var(--accent-2),var(--accent));
+    border-color:var(--accent); box-shadow:0 0 12px rgba(212,175,55,.35);
+  }
+  main{max-width:1180px; margin:0 auto; padding:18px 16px 60px}
+  /* ---------- generici ---------- */
+  .card{background:var(--bg-2); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:18px}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .btn{
+    background:var(--bg-3); color:var(--text); border:1px solid var(--border); padding:9px 14px;
+    border-radius:10px; cursor:pointer; font-size:.85rem; font-weight:600;
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn.gold{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#1a1205; border-color:var(--accent)}
+  .btn.danger{background:var(--danger); color:#fff; border-color:var(--danger)}
+  .btn.sm{padding:5px 9px; font-size:.78rem; border-radius:8px}
+  .muted{color:var(--text-dim)}
+  .pill{display:inline-block; padding:2px 9px; border-radius:20px; font-size:.7rem; font-weight:700; border:1px solid var(--border)}
+  .sectionTitle{display:flex; align-items:center; gap:10px; margin:0 0 14px}
+  .sectionTitle h2{margin:0; font-size:1.25rem; color:var(--accent)}
+  .hint{font-size:.78rem; color:var(--text-dim); margin:8px 0 0; line-height:1.5}
+  .banner{
+    background:rgba(210,153,34,.12); border:1px solid var(--warn); color:#f0d68a;
+    padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:.85rem;
+    display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
+  /* ---------- matrice gare ---------- */
+  .matrix-wrap{overflow:auto; border:1px solid var(--border); border-radius:12px}
+  table.matrix{border-collapse:separate; border-spacing:0; width:100%; font-size:.85rem; min-width:760px}
+  table.matrix th, table.matrix td{padding:8px 9px; border-bottom:1px solid var(--border); text-align:center}
+  table.matrix thead th{
+    position:sticky; top:0; z-index:5; background:var(--bg-3); color:var(--text);
+    font-size:.78rem; letter-spacing:.5px; border-bottom:2px solid var(--accent);
+  }
+  table.matrix thead th .coeff{display:block; font-size:.66rem; color:var(--text-dim); font-weight:400}
+  table.matrix thead th .cname{display:block; font-weight:600}
+  table.matrix thead th .cbar{display:block; height:3px; width:72%; margin:4px auto 3px; border-radius:3px}
+  table.matrix .colNum{width:34px; color:var(--text-dim)}
+  table.matrix .colGara{text-align:left; min-width:190px}
+  table.matrix td.colNum, table.matrix td.colGara, table.matrix th.colNum, table.matrix th.colGara{
+    position:sticky; left:0; background:var(--bg-2); z-index:4;
+  }
+  table.matrix th.colGara{z-index:6}
+  table.matrix td.colNum{left:0; z-index:4}
+  table.matrix td.colGara{left:34px; z-index:4; border-right:1px solid var(--border)}
+  table.matrix th.colGara{left:34px}
+  table.matrix tbody tr:hover td{background:var(--bg-3)}
+  table.matrix tbody tr.nondisp td{opacity:.62}
+  table.matrix tr.grouprow td.grouphdr{
+    position:sticky; left:0; z-index:3; text-align:left;
+    font-family:Georgia,serif; font-weight:700; font-size:.98rem; letter-spacing:.6px;
+    color:var(--accent); background:#1c232e;
+    border-top:1px solid var(--border); border-bottom:1px solid var(--accent);
+    box-shadow:inset 4px 0 0 var(--accent); padding:9px 14px 8px;
+  }
+  table.matrix tr.grouprow:hover td{background:#1c232e}
+  .gara-name{font-weight:700}
+  .gara-cat{font-size:.74rem; color:var(--text-dim)}
+  select.cell, select.tipo{
+    background:var(--bg-1); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:5px 6px; font-size:.85rem; cursor:pointer; min-width:52px; text-align:center;
+  }
+  select.cell:focus, select.tipo:focus{outline:1px solid var(--accent); border-color:var(--accent)}
+  select.cell.set{border-color:var(--accent)}
+  td.cell.dup{outline:2px dashed var(--warn); outline-offset:-2px}
+  .cellpts{display:block; font-size:.68rem; color:var(--accent); margin-top:3px; min-height:.9em}
+  .tipo-badge{font-size:.66rem}
+  tfoot td{background:var(--bg-3); font-weight:700; border-top:2px solid var(--accent)}
+  tfoot .tp{color:var(--accent)} tfoot .td{color:var(--text-dim); font-weight:600; font-size:.74rem; display:block}
+  /* ---------- classifiche ---------- */
+  .standings{display:flex; flex-direction:column; gap:10px}
+  .srow{
+    display:grid; grid-template-columns:46px 1fr auto; align-items:center; gap:14px;
+    background:var(--bg-3); border:1px solid var(--border); border-left:5px solid var(--cc,var(--border));
+    border-radius:12px; padding:12px 16px;
+  }
+  .srow .rank{font-size:1.5rem; font-weight:800; color:var(--accent); text-align:center}
+  .srow.p1{background:linear-gradient(90deg,rgba(255,215,0,.12),var(--bg-3)); border-left-color:#ffd700}
+  .srow.p2{border-left-color:#c0c0c0}
+  .srow.p3{border-left-color:#cd7f32}
+  .srow .nome{font-weight:700; font-size:1.05rem; font-family:Georgia,serif}
+  .srow .sub{font-size:.72rem; color:var(--text-dim)}
+  .srow .bar{height:7px; border-radius:6px; margin-top:6px; background:var(--cc,var(--accent)); opacity:.85}
+  .srow .tot{font-size:1.45rem; font-weight:800; color:var(--accent); white-space:nowrap}
+  .srow .medal{font-size:1.2rem}
+  /* ---------- grafici ---------- */
+  .chart-card svg{width:100%; height:auto; display:block}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; justify-content:center}
+  .legend span{display:flex; align-items:center; gap:6px; font-size:.8rem; color:var(--text-dim)}
+  .legend i{width:14px; height:4px; border-radius:3px; display:inline-block}
+  /* ---------- impostazioni ---------- */
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px}
+  table.cfg{width:100%; border-collapse:collapse; font-size:.84rem}
+  table.cfg th, table.cfg td{padding:6px 8px; border-bottom:1px solid var(--border); text-align:center}
+  table.cfg th{color:var(--text-dim); font-weight:600}
+  table.cfg input{width:100%; background:var(--bg-1); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:5px 7px; font-size:.84rem}
+  table.cfg input[type=color]{padding:1px; height:30px; cursor:pointer}
+  table.cfg input.num{max-width:90px; text-align:center}
+  .gare-edit .ge-row{display:grid; grid-template-columns:30px 1.4fr 1.1fr 110px auto; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid var(--border)}
+  .gare-edit input, .gare-edit select{background:var(--bg-1); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:6px 8px; font-size:.82rem; width:100%}
+  .gare-edit .ge-num{color:var(--text-dim); text-align:center; font-size:.8rem}
+  .iconbtn{background:none; border:1px solid var(--border); color:var(--text-dim); border-radius:7px; cursor:pointer; padding:4px 8px; font-size:.8rem}
+  .iconbtn:hover{color:var(--text); border-color:var(--accent)}
+  /* ---------- presentazione ---------- */
+  #present{
+    position:fixed; inset:0; z-index:100; background:radial-gradient(1200px 700px at 50% 0%, #18202c, #07090d 70%);
+    display:none; flex-direction:column; padding:3vh 4vw; overflow:auto;
+  }
+  #present.on{display:flex}
+  #present h2{font-size:clamp(1.6rem,4vw,3rem); text-align:center; margin:0 0 1vh;
+    background:linear-gradient(180deg,var(--accent-2),var(--accent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  #present .ptoggle{display:flex; gap:10px; justify-content:center; margin-bottom:2vh}
+  #present .pclose{position:absolute; top:18px; right:22px}
+  .podium{display:flex; justify-content:center; align-items:flex-end; gap:2vw; margin:2vh 0 3vh}
+  .podium .pcol{display:flex; flex-direction:column; align-items:center; gap:8px}
+  .podium .block{width:16vw; max-width:200px; border-radius:14px 14px 0 0; display:flex; align-items:flex-end; justify-content:center;
+    color:#0d1117; font-weight:800; font-size:clamp(1.4rem,3vw,2.4rem); padding-bottom:10px; border:1px solid rgba(255,255,255,.15)}
+  .podium .pname{font-family:Georgia,serif; font-size:clamp(1rem,2.2vw,1.6rem); font-weight:700}
+  .podium .pscore{color:var(--accent); font-weight:800; font-size:clamp(1.1rem,2.4vw,1.8rem)}
+  .bigstand{display:flex; flex-direction:column; gap:1.2vh; max-width:900px; margin:0 auto; width:100%}
+  .bigstand .br{display:grid; grid-template-columns:60px 1fr auto; align-items:center; gap:2vw;
+    background:rgba(31,38,48,.7); border:1px solid var(--border); border-left:8px solid var(--cc); border-radius:14px; padding:1.4vh 2vw}
+  .bigstand .br .r{font-size:clamp(1.4rem,3vw,2.2rem); font-weight:800; color:var(--accent); text-align:center}
+  .bigstand .br .n{font-family:Georgia,serif; font-weight:700; font-size:clamp(1.2rem,2.6vw,2rem)}
+  .bigstand .br .t{font-size:clamp(1.3rem,2.8vw,2.1rem); font-weight:800; color:var(--accent)}
+  @media (max-width:640px){
+    nav button{padding:7px 11px; font-size:.78rem}
+    .srow{grid-template-columns:38px 1fr auto}
+    .gare-edit .ge-row{grid-template-columns:24px 1fr 1fr; }
+    .gare-edit .ge-row .ge-tipo, .gare-edit .ge-row .ge-actions{grid-column:span 3; justify-self:start}
+  }
+  /* stampa */
+  @media print{
+    nav,#saveBadge,.no-print,#present{display:none!important}
+    body{background:#fff; color:#000}
+    .card{border-color:#999}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>PALIO 2026</h1>
+  <p>Calcolo Punteggio · Classifica Palio &amp; Drappo</p>
+  <span id="saveBadge">—</span>
+</header>
+
+<nav id="nav"></nav>
+<main id="app"></main>
+
+<!-- overlay presentazione -->
+<div id="present">
+  <button class="btn pclose no-print" data-action="present-close">✕ Chiudi</button>
+  <h2 id="presTitle">Classifica Palio</h2>
+  <div class="ptoggle">
+    <button class="btn gold" data-action="present-mode" data-mode="palio" id="pmPalio">PALIO</button>
+    <button class="btn" data-action="present-mode" data-mode="drappo" id="pmDrappo">DRAPPO</button>
+  </div>
+  <div id="presBody"></div>
+</div>
+
+<input type="file" id="importFile" accept="application/json,.json" style="display:none">
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== DATI PREDEFINITI ===================== */
+const CONTRADE_DEF = [
+  {id:'andromeda', nome:'Andromeda', coeff:3.33,    c1:'#9ca3af', c2:'#ffffff', chart:'#9ca3af'}, // grigio/bianco
+  {id:'bosco',     nome:'Bosco',     coeff:1.25,    c1:'#f97316', c2:'#dc2626', chart:'#f97316'}, // arancio/rosso
+  {id:'giardini',  nome:'Giardini',  coeff:1.10,    c1:'#facc15', c2:'#16a34a', chart:'#16a34a'}, // giallo/verde
+  {id:'lago',      nome:'Lago',      coeff:100/85,  c1:'#1e40af', c2:'#38bdf8', chart:'#38bdf8'}, // blu/azzurro
+  {id:'sagittario',nome:'Sagittario',coeff:2.00,    c1:'#ec4899', c2:'#1d4ed8', chart:'#ec4899'}, // rosa/blu
+];
+const TIPI = ['Punti 5','Punti 4','Punti 3','Punti B','Punti T'];
+const TABELLA_DEF = {
+  'Punti 5':[10,7,5,3,2],
+  'Punti 4':[7,5,3,2,0],
+  'Punti 3':[5,3,2,0,0],
+  'Punti B':[5,4,3,2,1],
+  'Punti T':[1,0,0,0,0],
+};
+// elenco gare (unione Excel + elenco sport ufficiale); [sport, categoria, tipo]
+const GARE_DEF = [
+  ['Maratona','Uomini','Punti 5'],
+  ['Maratona','Donne','Punti 5'],
+  ['Maratona','Juniores','Punti 5'],
+  ['Pallavolo','Mista','Punti 5'],
+  ['Pallavolo','Femminile','Punti 5'],
+  ['Nuoto','Maschile Stile','Punti 5'],
+  ['Nuoto','Maschile Rana','Punti 5'],
+  ['Nuoto','Femminile Stile','Punti 5'],
+  ['Nuoto','Femminile Rana','Punti 5'],
+  ['Nuoto','Juniores Stile','Punti 5'],
+  ['Nuoto','Juniores Rana','Punti 5'],
+  ['Nuoto','Staffetta Mista','Punti 5'],
+  ['Tennis','Maschile','Punti 5'],
+  ['Tennis','Femminile','Punti 5'],
+  ['Tennis','Doppio Misto','Punti 5'],
+  ['Basket','Maschile','Punti 5'],
+  ['Basket','Juniores','Punti 5'],
+  ['Calcio','Maschile','Punti 5'],
+  ['Calcio','Juniores','Punti 5'],
+  ['Ping Pong','Maschile','Punti 5'],
+  ['Ping Pong','Femminile','Punti 5'],
+  ['Ping Pong','Doppio Misto','Punti 5'],
+  ['Ping Pong','Juniores','Punti 5'],
+  ['Ping Pong','14-17','Punti 5'],
+  ['Calcio Balilla','Misto','Punti 5'],
+  ['Calcio Balilla','Juniores','Punti 5'],
+  ['Freccette','','Punti 5'],
+  ['Bocce','Doppio Mix','Punti 5'],
+  ['Scacchi','Adulti','Punti 5'],
+  ['Burraco','Mix','Punti B'],
+  ['Gara torte','Mix','Punti T'],
+];
+
+const STATE_VERSION = 1;
+const STORE_KEY = 'palioCalcoloPunti';
+let _uid = 1;
+const uid = () => 'g' + (_uid++) + '_' + Math.floor(Math.random()*1e6).toString(36);
+
+function emptyPos(){ const p={}; CONTRADE_DEF.forEach(c=>p[c.id]=null); return p; }
+
+function defaults(){
+  return {
+    version: STATE_VERSION,
+    contrade: CONTRADE_DEF.map(c=>({...c})),
+    tabellaPunti: JSON.parse(JSON.stringify(TABELLA_DEF)),
+    gare: GARE_DEF.map(([sport,categoria,tipo])=>({id:uid(), sport, categoria, tipo, pos:emptyPos()})),
+  };
+}
+
+/* ===================== STATO + PERSISTENZA ===================== */
+let state = null;
+let storageOk = true;
+let memFallback = null;
+
+function migrate(s){
+  if(!s || typeof s!=='object') return null;
+  if(!Array.isArray(s.contrade) || !Array.isArray(s.gare) || !s.tabellaPunti) return null;
+  // assicura campi minimi
+  s.version = s.version || STATE_VERSION;
+  s.gare.forEach(g=>{ if(!g.pos) g.pos=emptyPos(); if(!g.id) g.id=uid(); });
+  return s;
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ const s = migrate(JSON.parse(raw)); if(s) return s; }
+  }catch(e){ storageOk = false; }
+  return null;
+}
+let saveTimer = null;
+function save(){
+  badge('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    const data = JSON.stringify(state);
+    try{
+      localStorage.setItem(STORE_KEY, data);
+      storageOk = true; badge('ok');
+    }catch(e){
+      storageOk = false; memFallback = data; badge('warn');
+    }
+  }, 180);
+}
+function badge(mode){
+  const el = document.getElementById('saveBadge');
+  if(mode==='saving'){ el.textContent='Salvataggio…'; el.className=''; }
+  else if(mode==='ok'){ el.textContent='Salvato ✓'; el.className='ok'; }
+  else if(mode==='warn'){ el.textContent='⚠ Memoria temporanea'; el.className='warn'; el.title='localStorage non disponibile: i dati restano solo finché la pagina è aperta. Usa Esporta JSON per il backup.'; }
+}
+
+/* ===================== FUNZIONI PURE DI CALCOLO ===================== */
+const contrada = cid => state.contrade.find(c=>c.id===cid);
+const coeff = cid => contrada(cid).coeff;
+function puntiPalio(g, cid){
+  const p = g.pos[cid];
+  if(p==null) return 0;
+  const arr = state.tabellaPunti[g.tipo];
+  return arr ? (Number(arr[p-1])||0) : 0;
+}
+const puntiDrappo = (g, cid) => puntiPalio(g, cid) * coeff(cid);
+const disputata = g => state.contrade.some(c => g.pos[c.id]!=null);
+
+// somme cumulative su gare disputate, in ordine
+function calcola(){
+  const disp = state.gare.filter(disputata);
+  const palio = {}, drappo = {}, totP = {}, totD = {};
+  state.contrade.forEach(c=>{ palio[c.id]=[]; drappo[c.id]=[]; totP[c.id]=0; totD[c.id]=0; });
+  disp.forEach(g=>{
+    state.contrade.forEach(c=>{
+      totP[c.id]+=puntiPalio(g,c.id);
+      totD[c.id]+=puntiDrappo(g,c.id);
+      palio[c.id].push(totP[c.id]);
+      drappo[c.id].push(totD[c.id]);
+    });
+  });
+  return {disp, palio, drappo, totP, totD};
+}
+// classifica con ranking 1-2-2-4 (pareggio su valore arrotondato a 2 dec)
+function classifica(tipo){
+  const {totP,totD} = calcola();
+  const tot = tipo==='palio' ? totP : totD;
+  const arr = state.contrade.map(c=>({c, val:tot[c.id]}));
+  arr.sort((a,b)=> (b.val-a.val) || a.c.nome.localeCompare(b.c.nome,'it'));
+  let prev=null;
+  arr.forEach((e,i)=>{
+    const rv = Math.round(e.val*100)/100;
+    if(i>0 && Math.abs(rv-prev)<0.005){ e.rank = arr[i-1].rank; }
+    else { e.rank = i+1; }
+    prev = rv;
+  });
+  return arr;
+}
+
+/* ===================== FORMATTAZIONE ===================== */
+const fmtP = n => String(Math.round(n));
+const fmtD = n => (Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtCoeff = n => n.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+const medal = r => r===1?'🥇':r===2?'🥈':r===3?'🥉':'';
+
+/* ===================== CONFIG MODIFICATA? ===================== */
+// segnala solo modifiche alle REGOLE di punteggio (coefficienti + tabella punti),
+// non i dati operativi (tipo per gara, elenco gare, colori, nomi)
+function configSkeleton(s){
+  return JSON.stringify({
+    coeff: s.contrade.map(c=>Math.round(c.coeff*1e6)),
+    t: s.tabellaPunti,
+  });
+}
+const DEFAULT_SKELETON = configSkeleton(defaults());
+const configModificata = () => configSkeleton(state) !== DEFAULT_SKELETON;
+
+/* ===================== NAV / VISTE ===================== */
+const VIEWS = [
+  {id:'gare',     label:'⚑ Gare'},
+  {id:'palio',    label:'🏆 Classifica Palio'},
+  {id:'drappo',   label:'🎗 Classifica Drappo'},
+  {id:'grafici',  label:'📈 Grafici'},
+  {id:'config',   label:'⚙ Impostazioni'},
+  {id:'present',  label:'🖥 Presentazione'},
+];
+let current = 'gare';
+function renderNav(){
+  document.getElementById('nav').innerHTML = VIEWS.map(v=>
+    `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`
+  ).join('');
+}
+
+function render(){
+  renderNav();
+  const app = document.getElementById('app');
+  const prevScroll = (current==='gare') ? scrollPosOfMatrix() : 0;
+  if(current==='gare')      app.innerHTML = viewGare();
+  else if(current==='palio')  app.innerHTML = viewClassifica('palio');
+  else if(current==='drappo') app.innerHTML = viewClassifica('drappo');
+  else if(current==='grafici')app.innerHTML = viewGrafici();
+  else if(current==='config') app.innerHTML = viewConfig();
+  if(current==='gare') restoreMatrixScroll(prevScroll);
+  if(current==='grafici') drawCharts();
+}
+let _matrixScroll = 0;
+function scrollPosOfMatrix(){ const w=document.querySelector('.matrix-wrap'); return w?w.scrollLeft:0; }
+function restoreMatrixScroll(x){ const w=document.querySelector('.matrix-wrap'); if(w) w.scrollLeft=x; }
+
+/* ===================== VISTA: GARE & INSERIMENTO ===================== */
+function viewGare(){
+  const {totP,totD,disp} = calcola();
+  const C = state.contrade;
+  const head = C.map(c=>`<th>
+      <span class="cname" style="color:${c.chart}">${esc(c.nome)}</span>
+      <span class="cbar" style="background:linear-gradient(90deg,${c.c1},${c.c2})"></span>
+      <span class="coeff">coeff. ${fmtCoeff(c.coeff)}</span></th>`).join('');
+  let lastSport = null;
+  const colCount = 2 + C.length;
+  const rows = state.gare.map((g,i)=>{
+    const nd = !disputata(g);
+    // intestazione di sezione quando cambia lo sport
+    let groupHdr = '';
+    if(g.sport !== lastSport){
+      lastSport = g.sport;
+      groupHdr = `<tr class="grouprow"><td class="grouphdr" colspan="${colCount}">${esc(g.sport)}</td></tr>`;
+    }
+    // rileva pareggi (stessa posizione su >1 contrada)
+    const counts = {};
+    C.forEach(c=>{ const p=g.pos[c.id]; if(p!=null) counts[p]=(counts[p]||0)+1; });
+    const cells = C.map(c=>{
+      const p = g.pos[c.id];
+      const dup = p!=null && counts[p]>1;
+      const opts = ['<option value="">—</option>'].concat([1,2,3,4,5].map(n=>
+        `<option value="${n}" ${p===n?'selected':''}>${n}ª</option>`)).join('');
+      const pts = p!=null ? `${fmtP(puntiPalio(g,c.id))}p · ${fmtD(puntiDrappo(g,c.id))}` : '';
+      return `<td class="cell ${dup?'dup':''}" ${dup?'title="Pareggio: stessa posizione su più contrade (consentito)"':''}>
+        <select class="cell ${p!=null?'set':''}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}">${opts}</select>
+        <span class="cellpts">${pts}</span></td>`;
+    }).join('');
+    const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
+    const label = esc(g.categoria) || esc(g.sport);
+    return groupHdr + `<tr class="${nd?'nondisp':''}">
+      <td class="colNum">${i+1}</td>
+      <td class="colGara">
+        <div class="gara-name">${label}</div>
+        <div class="gara-cat">${nd?'<em>da disputare</em>':'&nbsp;'}</div>
+        <select class="tipo" data-action="tipo" data-gid="${g.id}" title="Tipo di punteggio (n. contrade partecipanti / competizione)">${tipoSel}</select>
+      </td>
+      ${cells}
+    </tr>`;
+  }).join('');
+  const footP = state.contrade.map(c=>`<td><span class="tp">${fmtP(totP[c.id])}</span><span class="td">Dr. ${fmtD(totD[c.id])}</span></td>`).join('');
+  const banner = configModificata()
+    ? `<div class="banner">⚠ Configurazione modificata rispetto ai valori predefiniti.
+        <button class="btn sm" data-action="reset-all">Ripristina tutto</button></div>` : '';
+  return `
+  ${banner}
+  <div class="card">
+    <div class="sectionTitle"><h2>Gare &amp; Inserimento</h2>
+      <span class="pill" style="border-color:var(--accent);color:var(--accent)">${disp.length}/${state.gare.length} gare disputate</span></div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead><tr>
+          <th class="colNum">#</th><th class="colGara">Gara / Tipo</th>${head}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr>
+          <td class="colNum"></td><td class="colGara">Totali</td>${footP}
+        </tr></tfoot>
+      </table>
+    </div>
+    <p class="hint">Imposta la posizione 1ª–5ª di ogni contrada. <b>—</b> = gara non ancora disputata (esclusa da classifiche e grafici).
+      Una contrada assente va messa <b>5ª</b>. I pareggi sono consentiti (cella evidenziata in ambra).
+      Il <b>Tipo</b> indica quante contrade partecipano (Punti 5/4/3) o la competizione (B = Burraco, T = Gara torte).</p>
+  </div>`;
+}
+
+/* ===================== VISTA: CLASSIFICHE ===================== */
+function viewClassifica(tipo){
+  const arr = classifica(tipo);
+  const max = Math.max(1, ...arr.map(e=>e.val));
+  const isDr = tipo==='drappo';
+  const rows = arr.map(e=>{
+    const cls = e.rank===1?'p1':e.rank===2?'p2':e.rank===3?'p3':'';
+    const val = isDr ? fmtD(e.val) : fmtP(e.val);
+    const sub = isDr ? `coeff. ${fmtCoeff(e.c.coeff)}` : '';
+    return `<div class="srow ${cls}" style="--cc:${e.c.chart}">
+      <div class="rank">${e.rank}<span class="medal">${medal(e.rank)}</span></div>
+      <div><div class="nome" style="color:${e.c.chart}">${esc(e.c.nome)}</div>
+        ${sub?`<div class="sub">${sub}</div>`:''}
+        <div class="bar" style="width:${Math.max(4,e.val/max*100)}%;background:linear-gradient(90deg,${e.c.c1},${e.c.c2})"></div></div>
+      <div class="tot">${val}</div>
+    </div>`;
+  }).join('');
+  return `<div class="card">
+    <div class="sectionTitle"><h2>${isDr?'Classifica Drappo':'Classifica Palio'}</h2></div>
+    <div class="standings">${rows}</div>
+    <p class="hint">Ordinamento per punti decrescenti. A parità di punti le contrade condividono la posizione (es. 1-2-2-4); l'ordine alfabetico è solo indicativo.
+      ${isDr?'Drappo = punti Palio × coefficiente della contrada.':''}</p>
+  </div>`;
+}
+
+/* ===================== VISTA: GRAFICI ===================== */
+function viewGrafici(){
+  const {disp} = calcola();
+  if(disp.length===0){
+    return `<div class="card"><div class="sectionTitle"><h2>Grafici</h2></div>
+      <p class="muted">Nessuna gara disputata: inserisci almeno un risultato nella scheda <b>Gare</b> per vedere l'andamento.</p></div>`;
+  }
+  const legend = `<div class="legend">${state.contrade.map(c=>
+     `<span><i style="background:linear-gradient(90deg,${c.c1},${c.c2})"></i>${esc(c.nome)}</span>`).join('')}</div>`;
+  return `
+  <div class="card chart-card">
+    <div class="sectionTitle"><h2>Andamento Palio</h2></div>
+    <div id="chartPalio"></div>${legend}
+  </div>
+  <div class="card chart-card">
+    <div class="sectionTitle"><h2>Andamento Drappo</h2></div>
+    <div id="chartDrappo"></div>${legend}
+  </div>`;
+}
+function drawCharts(){
+  const {disp,palio,drappo} = calcola();
+  if(disp.length===0) return;
+  const labels = disp.map((g,i)=>`${i+1}. ${g.sport}${g.categoria?(' '+g.categoria):''}`);
+  const mk = c => ({id:c.id, nome:c.nome, color:c.chart, c1:c.c1, c2:c.c2});
+  const seriesP = state.contrade.map(c=>({...mk(c), data:palio[c.id]}));
+  const seriesD = state.contrade.map(c=>({...mk(c), data:drappo[c.id]}));
+  const ep = document.getElementById('chartPalio');
+  const ed = document.getElementById('chartDrappo');
+  if(ep) ep.innerHTML = lineChartSVG(seriesP, labels, false, 'p');
+  if(ed) ed.innerHTML = lineChartSVG(seriesD, labels, true, 'd');
+}
+function lineChartSVG(series, labels, decimals, key){
+  const W=820, H=380, pad={l:48,r:18,t:18,b:64};
+  key = key||'c';
+  // gradienti per contrada: i due colori si mischiano lungo la linea
+  const defs = '<defs>'+series.map(s=>
+    `<linearGradient id="ln_${key}_${s.id}" x1="0" y1="0" x2="1" y2="0">
+       <stop offset="0%" stop-color="${s.c1}"/><stop offset="100%" stop-color="${s.c2}"/></linearGradient>`
+  ).join('')+'</defs>';
+  const n = labels.length;
+  const allMax = Math.max(1, ...series.flatMap(s=>s.data));
+  // scala "carina" per l'asse Y
+  const step = niceStep(allMax/5);
+  const yMax = Math.ceil(allMax/step)*step || step;
+  const xOf = i => pad.l + (n<=1 ? (W-pad.l-pad.r)/2 : (i/(n-1))*(W-pad.l-pad.r));
+  const yOf = v => H-pad.b - (v/yMax)*(H-pad.t-pad.b);
+  let g='';
+  // griglia + etichette Y
+  for(let v=0; v<=yMax+1e-9; v+=step){
+    const y=yOf(v);
+    g+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#30363d" stroke-width="1"/>`;
+    g+=`<text x="${pad.l-6}" y="${(y+4).toFixed(1)}" fill="#8b949e" font-size="11" text-anchor="end">${decimals?fmtD(v):fmtP(v)}</text>`;
+  }
+  // etichette X (mostra alcune per non affollare)
+  const everyX = Math.ceil(n/10);
+  labels.forEach((lab,i)=>{
+    if(i%everyX!==0 && i!==n-1) return;
+    const x=xOf(i);
+    g+=`<text x="${x.toFixed(1)}" y="${H-pad.b+16}" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-35 ${x.toFixed(1)} ${H-pad.b+16})">${esc(String(i+1))}</text>`;
+  });
+  g+=`<line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#484f58"/>`;
+  g+=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#484f58"/>`;
+  // linee per contrada
+  series.forEach(s=>{
+    const pts = s.data.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ');
+    if(n>1) g+=`<polyline points="${pts}" fill="none" stroke="url(#ln_${key}_${s.id})" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s.data.forEach((v,i)=>{
+      g+=`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(v).toFixed(1)}" r="${n>30?2.5:3.6}" fill="${s.color}" stroke="#0d1117" stroke-width="0.8">
+        <title>${esc(s.nome)} — dopo ${esc(labels[i])}: ${decimals?fmtD(v):fmtP(v)}</title></circle>`;
+    });
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">${defs}${g}</svg>`;
+}
+function niceStep(x){
+  if(x<=0) return 1;
+  const p=Math.pow(10,Math.floor(Math.log10(x)));
+  const f=x/p;
+  return (f<=1?1:f<=2?2:f<=5?5:10)*p;
+}
+
+/* ===================== VISTA: IMPOSTAZIONI ===================== */
+function viewConfig(){
+  const C = state.contrade;
+  const contRows = C.map(c=>`<tr>
+    <td><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}"></td>
+    <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}"></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c1" value="${c.c1}"></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c2" value="${c.c2}"></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="chart" value="${c.chart}"></td>
+  </tr>`).join('');
+
+  const head = TIPI.map(t=>`<th>${t}</th>`).join('');
+  const pun128 = [1,2,3,4,5].map(pos=>{
+    const cells = TIPI.map(t=>`<td><input class="num" data-action="cfg-punti" data-tipo="${t}" data-idx="${pos-1}" value="${esc(String(state.tabellaPunti[t][pos-1]))}"></td>`).join('');
+    return `<tr><th>${pos}ª</th>${cells}</tr>`;
+  }).join('');
+
+  const gareRows = state.gare.map((g,i)=>{
+    const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
+    return `<div class="ge-row" data-gid="${g.id}">
+      <div class="ge-num">${i+1}</div>
+      <input data-action="cfg-gara" data-gid="${g.id}" data-f="sport" value="${esc(g.sport)}" placeholder="Sport">
+      <input data-action="cfg-gara" data-gid="${g.id}" data-f="categoria" value="${esc(g.categoria)}" placeholder="Categoria">
+      <select class="ge-tipo" data-action="cfg-gara" data-gid="${g.id}" data-f="tipo">${tipoSel}</select>
+      <div class="ge-actions row" style="gap:4px">
+        <button class="iconbtn" data-action="gara-up" data-gid="${g.id}" title="Su">▲</button>
+        <button class="iconbtn" data-action="gara-down" data-gid="${g.id}" title="Giù">▼</button>
+        <button class="iconbtn" data-action="gara-del" data-gid="${g.id}" title="Elimina">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="grid2">
+    <div class="card">
+      <div class="sectionTitle"><h2>Contrade &amp; Coefficienti</h2></div>
+      <table class="cfg">
+        <thead><tr><th>Nome</th><th>Coeff.</th><th>Colore 1</th><th>Colore 2</th><th>Grafico</th></tr></thead>
+        <tbody>${contRows}</tbody>
+      </table>
+      <p class="hint">Drappo = Palio × coefficiente. Il colore "Grafico" è quello usato nelle linee (Lago usa l'azzurro per distinguersi da Sagittario).</p>
+    </div>
+    <div class="card">
+      <div class="sectionTitle"><h2>Tabella Punti</h2></div>
+      <table class="cfg">
+        <thead><tr><th>Pos.</th>${head}</tr></thead>
+        <tbody>${pun128}</tbody>
+      </table>
+      <p class="hint">Punti assegnati per posizione e tipo. Punti 5/4/3 = n. contrade partecipanti; B = Burraco; T = Gara torte.</p>
+    </div>
+  </div>
+
+  <div class="card gare-edit">
+    <div class="sectionTitle"><h2>Elenco Gare</h2>
+      <button class="btn sm gold" data-action="gara-add">+ Aggiungi gara</button></div>
+    <div class="ge-row" style="font-weight:700;color:var(--text-dim)">
+      <div class="ge-num">#</div><div>Sport</div><div>Categoria</div><div>Tipo</div><div>Azioni</div></div>
+    ${gareRows}
+    <p class="hint">L'ordine è quello cronologico usato nei cumulativi e nei grafici. Riordina con ▲▼.</p>
+  </div>
+
+  <div class="card">
+    <div class="sectionTitle"><h2>Dati: Backup &amp; Ripristino</h2></div>
+    <div class="row">
+      <button class="btn gold" data-action="export-json">⬇ Esporta JSON (backup)</button>
+      <button class="btn" data-action="export-csv">⬇ Esporta CSV (Excel)</button>
+      <button class="btn" data-action="import-json">⬆ Importa JSON</button>
+      <button class="btn danger" data-action="reset-all">↺ Ripristina valori predefiniti</button>
+    </div>
+    <p class="hint">Il salvataggio è automatico in questo browser. Usa <b>Esporta JSON</b> per un backup completo o per spostare i dati su un altro dispositivo.
+      Il <b>CSV</b> si apre direttamente in Excel (separatore «;», decimali con la virgola).</p>
+  </div>`;
+}
+
+/* ===================== PRESENTAZIONE ===================== */
+let presentMode = 'palio';
+function openPresent(){
+  document.getElementById('present').classList.add('on');
+  renderPresent();
+  if(document.documentElement.requestFullscreen){ try{ document.documentElement.requestFullscreen(); }catch(e){} }
+}
+function closePresent(){
+  document.getElementById('present').classList.remove('on');
+  if(document.fullscreenElement && document.exitFullscreen){ try{ document.exitFullscreen(); }catch(e){} }
+}
+function renderPresent(){
+  const tipo = presentMode;
+  document.getElementById('presTitle').textContent = tipo==='drappo'?'Classifica Drappo':'Classifica Palio';
+  document.getElementById('pmPalio').className = 'btn'+(tipo==='palio'?' gold':'');
+  document.getElementById('pmDrappo').className = 'btn'+(tipo==='drappo'?' gold':'');
+  const arr = classifica(tipo);
+  const isDr = tipo==='drappo';
+  const fv = e => isDr?fmtD(e.val):fmtP(e.val);
+  // podio (primi 3 per posizione)
+  const top3 = arr.filter(e=>e.rank<=3);
+  const byRank = r => top3.filter(e=>e.rank===r);
+  const podBlock = (e, h, label) => `<div class="pcol">
+      <div class="pname" style="color:${e.c.chart}">${esc(e.c.nome)}</div>
+      <div class="pscore">${fv(e)}</div>
+      <div class="block" style="height:${h}px;background:linear-gradient(180deg,${e.c.c1},${e.c.c2})">${label}</div></div>`;
+  const ord = [].concat(byRank(2), byRank(1), byRank(3)); // 2 - 1 - 3
+  const hMap = {1:150,2:110,3:80};
+  const podium = `<div class="podium">${ord.map(e=>podBlock(e,hMap[e.rank],e.rank)).join('')}</div>`;
+  const big = `<div class="bigstand">${arr.map(e=>`
+    <div class="br" style="--cc:${e.c.chart}">
+      <div class="r">${e.rank}${medal(e.rank)}</div>
+      <div class="n" style="color:${e.c.chart}">${esc(e.c.nome)}</div>
+      <div class="t">${fv(e)}</div>
+    </div>`).join('')}</div>`;
+  document.getElementById('presBody').innerHTML = podium + big;
+}
+
+/* ===================== EXPORT / IMPORT ===================== */
+function download(filename, text, mime){
+  const blob = new Blob([text], {type:mime||'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+function exportJSON(){
+  download('Palio2026_punteggio.json', JSON.stringify(state,null,2), 'application/json;charset=utf-8');
+}
+function exportCSV(){
+  const {totP,totD,disp} = calcola();
+  const C = state.contrade;
+  const SEP=';';
+  const dec = n => String(n).replace('.',',');
+  const lines = [];
+  lines.push('PALIO 2026 - CALCOLO PUNTEGGIO');
+  lines.push('');
+  // classifica palio
+  lines.push('CLASSIFICA PALIO');
+  lines.push(['Pos','Contrada','Punti'].join(SEP));
+  classifica('palio').forEach(e=>lines.push([e.rank, e.c.nome, fmtP(e.val)].join(SEP)));
+  lines.push('');
+  lines.push('CLASSIFICA DRAPPO');
+  lines.push(['Pos','Contrada','Coeff','Punti'].join(SEP));
+  classifica('drappo').forEach(e=>lines.push([e.rank, e.c.nome, dec(fmtCoeff(e.c.coeff)), dec(fmtD(e.val))].join(SEP)));
+  lines.push('');
+  // dettaglio punti palio per gara
+  lines.push('PUNTI PALIO PER GARA');
+  lines.push(['#','Sport','Categoria','Tipo', ...C.map(c=>c.nome)].join(SEP));
+  state.gare.forEach((g,i)=>{
+    const cells = C.map(c=> g.pos[c.id]==null ? '' : fmtP(puntiPalio(g,c.id)));
+    lines.push([i+1, g.sport, g.categoria, g.tipo, ...cells].join(SEP));
+  });
+  lines.push(['','','','TOTALE', ...C.map(c=>fmtP(totP[c.id]))].join(SEP));
+  lines.push('');
+  // dettaglio punti drappo per gara
+  lines.push('PUNTI DRAPPO PER GARA');
+  lines.push(['#','Sport','Categoria','Tipo', ...C.map(c=>c.nome)].join(SEP));
+  state.gare.forEach((g,i)=>{
+    const cells = C.map(c=> g.pos[c.id]==null ? '' : dec(fmtD(puntiDrappo(g,c.id))));
+    lines.push([i+1, g.sport, g.categoria, g.tipo, ...cells].join(SEP));
+  });
+  lines.push(['','','','TOTALE', ...C.map(c=>dec(fmtD(totD[c.id])))].join(SEP));
+  const BOM='﻿';
+  download('Palio2026_punteggio.csv', BOM+lines.join('\r\n'), 'text/csv;charset=utf-8');
+}
+function importJSON(){
+  document.getElementById('importFile').click();
+}
+function handleImport(file){
+  const r = new FileReader();
+  r.onload = e => {
+    try{
+      const s = migrate(JSON.parse(e.target.result));
+      if(!s) throw new Error('formato non valido');
+      state = s; save(); render();
+      alert('Dati importati correttamente.');
+    }catch(err){
+      alert('File non valido: '+err.message);
+    }
+  };
+  r.readAsText(file);
+}
+
+/* ===================== EVENTI ===================== */
+function findGara(gid){ return state.gare.find(g=>g.id===gid); }
+
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-action]');
+  if(!t) return;
+  const a = t.dataset.action;
+  switch(a){
+    case 'nav':
+      if(t.dataset.view==='present'){ openPresent(); return; }
+      current = t.dataset.view; render(); window.scrollTo({top:0});
+      break;
+    case 'present-close': closePresent(); break;
+    case 'present-mode': presentMode = t.dataset.mode; renderPresent(); break;
+    case 'export-json': exportJSON(); break;
+    case 'export-csv': exportCSV(); break;
+    case 'import-json': importJSON(); break;
+    case 'reset-all':
+      if(confirm('Ripristinare tutti i valori predefiniti?\n\nQuesto cancella TUTTI i risultati inseriti e ripristina contrade, tabella punti ed elenco gare.')){
+        state = defaults(); save(); render();
+      }
+      break;
+    case 'gara-add':
+      state.gare.push({id:uid(), sport:'Nuova gara', categoria:'', tipo:'Punti 4', pos:emptyPos()});
+      save(); render();
+      break;
+    case 'gara-del': {
+      const g = findGara(t.dataset.gid);
+      if(g && confirm('Eliminare la gara "'+g.sport+(g.categoria?' '+g.categoria:'')+'"?')){
+        state.gare = state.gare.filter(x=>x.id!==t.dataset.gid); save(); render();
+      }
+      break; }
+    case 'gara-up': moveGara(t.dataset.gid,-1); break;
+    case 'gara-down': moveGara(t.dataset.gid,1); break;
+  }
+});
+function moveGara(gid, dir){
+  const i = state.gare.findIndex(g=>g.id===gid);
+  const j = i+dir;
+  if(i<0||j<0||j>=state.gare.length) return;
+  const arr=state.gare; [arr[i],arr[j]]=[arr[j],arr[i]];
+  save(); render();
+}
+
+document.addEventListener('change', e=>{
+  const t = e.target.closest('[data-action]');
+  if(!t) return;
+  const a = t.dataset.action;
+  if(a==='pos'){
+    const g = findGara(t.dataset.gid);
+    g.pos[t.dataset.cid] = t.value==='' ? null : parseInt(t.value,10);
+    save(); render();
+  }
+  else if(a==='tipo'){
+    findGara(t.dataset.gid).tipo = t.value; save(); render();
+  }
+  else if(a==='cfg-cont'){
+    const c = contrada(t.dataset.cid), f=t.dataset.f;
+    if(f==='coeff'){ const v=parseFloat(String(t.value).replace(',','.')); if(!isNaN(v)) c.coeff=v; }
+    else c[f]=t.value;
+    save();
+    if(f==='coeff') render(); // i valori dipendono dal coeff
+  }
+  else if(a==='cfg-punti'){
+    const v = parseFloat(String(t.value).replace(',','.'));
+    state.tabellaPunti[t.dataset.tipo][parseInt(t.dataset.idx,10)] = isNaN(v)?0:v;
+    save();
+  }
+  else if(a==='cfg-gara'){
+    const g = findGara(t.dataset.gid);
+    g[t.dataset.f] = t.value;
+    save();
+    if(t.dataset.f==='tipo') { /* niente re-render: select già aggiornato */ }
+  }
+  else if(t.id==='importFile'){ /* gestito sotto */ }
+});
+
+document.getElementById('importFile').addEventListener('change', function(){
+  if(this.files && this.files[0]) handleImport(this.files[0]);
+  this.value='';
+});
+
+// scorciatoie presentazione
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') closePresent();
+});
+
+/* ===================== AUTOTEST (console) ===================== */
+function selfTest(){
+  // scenario noto: tutte le contrade 5ª con tipo Punti B -> 1 punto Palio ciascuna, Drappo = coeff
+  const bak = JSON.stringify(state);
+  state = defaults();
+  const g = state.gare.find(x=>x.tipo==='Punti B') || state.gare[0];
+  g.tipo='Punti B';
+  state.contrade.forEach(c=> g.pos[c.id]=5);
+  const okPalio = state.contrade.every(c=> puntiPalio(g,c.id)===1);
+  const okDr = Math.abs(puntiDrappo(g,'sagittario') - 2) < 1e-9
+            && Math.abs(puntiDrappo(g,'andromeda') - 3.33) < 1e-9;
+  // 1ª posto Punti 5 = 10
+  g.tipo='Punti 5'; g.pos.bosco=1;
+  const okP5 = puntiPalio(g,'bosco')===10;
+  state = JSON.parse(bak);
+  console.log('%cAutotest calcolo:', 'color:#d4af37',
+    okPalio&&okDr&&okP5 ? 'OK ✓' : 'FALLITO ✗', {okPalio, okDr, okP5});
+}
+
+/* ===================== AVVIO ===================== */
+state = load() || defaults();
+if(!storageOk) badge('warn'); else badge('ok');
+render();
+try{ selfTest(); }catch(e){ console.warn('selfTest error', e); }
+
+})();
+</script>
+</body>
+</html>
