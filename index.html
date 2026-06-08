@@ -362,6 +362,7 @@ const CLOUD_PATH = 'palio2026';
 // SHA-256 della password admin (nel sorgente c'è solo l'hash, non la password)
 const ADMIN_HASH = '1d6f1c6e5cadfe038e46365ac26fbbfb8323af3e23ad4d5665ae020dee3b117f';
 const DEFAULT_WAIT_MSG = 'Torna Sabato sera per scoprire i risultati dopo la prima giornata di gare!';
+const REVEAL_PIN = '2026';   // PIN di conferma per pubblicare le classifiche al pubblico
 
 let db=null, cloudOn=false, cloudConnected=false, applyingRemote=false, cloudInited=false;
 let publicData = null;   // contenuto del nodo /public (messaggio + snapshot pubblicato)
@@ -1021,9 +1022,14 @@ document.addEventListener('click', e=>{
       break;
     case 'present-close': closePresent(); break;
     case 'present-mode': presentMode = t.dataset.mode; renderPresent(); break;
-    case 'pub-reveal':
-      if(confirm('Pubblicare ORA le classifiche attuali?\n\nIl pubblico vedrà questa fotografia (congelata) finché non pubblichi di nuovo.')) publishReveal();
+    case 'pub-reveal': {
+      const pin = prompt('Inserisci il PIN per PUBBLICARE le classifiche al pubblico:');
+      if(pin==null) break;
+      if(pin.trim() !== REVEAL_PIN){ alert('PIN errato. Pubblicazione annullata.'); break; }
+      publishReveal();
+      alert('Classifiche pubblicate al pubblico ✓');
       break;
+    }
     case 'pub-hide':
       if(confirm('Nascondere le classifiche al pubblico?\n\nTornerà a vedere il messaggio di attesa.')) publishHide();
       break;
