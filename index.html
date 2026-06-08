@@ -38,6 +38,16 @@
   }
   #saveBadge.ok{color:var(--success); border-color:var(--success)}
   #saveBadge.warn{color:var(--warn); border-color:var(--warn)}
+  #topbar{position:absolute; left:14px; top:14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .cbadge{font-size:.72rem; padding:4px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-dim); background:var(--bg-2)}
+  .cbadge.live{color:var(--success); border-color:var(--success)}
+  .cbadge.off{color:var(--warn); border-color:var(--warn)}
+  .cbadge.btnlike{cursor:pointer; font-weight:600}
+  .cbadge.btnlike:hover{border-color:var(--accent); color:var(--text)}
+  .cbadge.btnlike.admin{color:#1a1205; background:linear-gradient(180deg,var(--accent-2),var(--accent)); border-color:var(--accent)}
+  select:disabled, input:disabled{opacity:.5; cursor:not-allowed}
+  .viewer-note{background:rgba(46,160,67,.10); border:1px solid var(--success); color:#9ae6b4; padding:9px 13px; border-radius:10px; margin-bottom:14px; font-size:.85rem}
+  @media (max-width:720px){ #topbar{position:static; justify-content:center; margin-top:10px} #saveBadge{position:static; display:inline-block; margin-top:8px} header{padding-bottom:12px} }
   /* ---------- nav ---------- */
   nav{
     display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:12px;
@@ -191,6 +201,10 @@
 </head>
 <body>
 <header>
+  <div id="topbar">
+    <span id="cloudBadge" class="cbadge">⚪ Locale</span>
+    <button id="adminBtn" class="cbadge btnlike" style="display:none">🔒 Admin</button>
+  </div>
   <h1>PALIO 2026</h1>
   <p>Calcolo Punteggio · Classifica Palio &amp; Drappo</p>
   <span id="saveBadge">—</span>
@@ -212,6 +226,9 @@
 
 <input type="file" id="importFile" accept="application/json,.json" style="display:none">
 
+<!-- Firebase (sincronizzazione condivisa in tempo reale). Se offline, l'app funziona in locale. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script>
 (function(){
 "use strict";
@@ -304,14 +321,19 @@ function load(){
   return null;
 }
 let saveTimer = null;
+// salva in locale (backup) e, se admin e cloud attivo, sincronizza sul database condiviso
 function save(){
+  saveLocal();
+  if(cloudOn && isAdmin && !applyingRemote) pushCloud();
+}
+function saveLocal(){
   badge('saving');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
     const data = JSON.stringify(state);
     try{
       localStorage.setItem(STORE_KEY, data);
-      storageOk = true; badge('ok');
+      storageOk = true; badge(cloudOn ? (isAdmin?'ok':'view') : 'ok');
     }catch(e){
       storageOk = false; memFallback = data; badge('warn');
     }
@@ -321,7 +343,112 @@ function badge(mode){
   const el = document.getElementById('saveBadge');
   if(mode==='saving'){ el.textContent='Salvataggio…'; el.className=''; }
   else if(mode==='ok'){ el.textContent='Salvato ✓'; el.className='ok'; }
+  else if(mode==='view'){ el.textContent='👁 Sola visione'; el.className=''; }
   else if(mode==='warn'){ el.textContent='⚠ Memoria temporanea'; el.className='warn'; el.title='localStorage non disponibile: i dati restano solo finché la pagina è aperta. Usa Esporta JSON per il backup.'; }
+}
+
+/* ===================== CLOUD (Firebase) + ADMIN ===================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCRXHYJ0q4rGLaJW4yyT0uwHNe9UDCgtQM",
+  authDomain: "thepaliocalculator.firebaseapp.com",
+  databaseURL: "https://thepaliocalculator-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "thepaliocalculator",
+  storageBucket: "thepaliocalculator.firebasestorage.app",
+  messagingSenderId: "784232052639",
+  appId: "1:784232052639:web:8da9d6360cffdaf1e1afaa",
+  measurementId: "G-G62FQCK7MV"
+};
+const CLOUD_PATH = 'palio2026';
+// SHA-256 della password admin (nel sorgente c'è solo l'hash, non la password)
+const ADMIN_HASH = '1d6f1c6e5cadfe038e46365ac26fbbfb8323af3e23ad4d5665ae020dee3b117f';
+
+let db=null, cloudOn=false, cloudConnected=false, applyingRemote=false, cloudInited=false;
+const myId = 'c'+Math.random().toString(36).slice(2,10);
+let isAdmin = false;
+// se il cloud è attivo si modifica solo da admin; in locale (senza cloud) si modifica liberamente
+const canEdit = () => isAdmin || !cloudOn;
+const ED = () => canEdit() ? '' : 'disabled';
+
+// normalizza i dati che arrivano da Firebase (array<->oggetto, pos mancanti)
+function normalizeState(s){
+  if(!s || typeof s!=='object') return null;
+  if(s.gare && !Array.isArray(s.gare)) s.gare = Object.values(s.gare);
+  if(s.contrade && !Array.isArray(s.contrade)) s.contrade = Object.values(s.contrade);
+  if(s.tabellaPunti) for(const k in s.tabellaPunti){ const v=s.tabellaPunti[k]; if(v && !Array.isArray(v)) s.tabellaPunti[k]=Object.values(v); }
+  return s;
+}
+
+function initCloud(){
+  if(cloudInited) return; cloudInited=true;
+  if(typeof firebase==='undefined' || !FIREBASE_CONFIG.databaseURL){ updateTopbar(); return; }
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    cloudOn = true;
+    db.ref('.info/connected').on('value', s=>{ cloudConnected=(s.val()===true); updateTopbar(); });
+    db.ref(CLOUD_PATH+'/state').on('value', snap=>{
+      const remote = snap.val();
+      if(remote && remote.data){
+        if(remote.updatedBy === myId) return;           // è il nostro stesso aggiornamento (eco)
+        const s = migrate(normalizeState(remote.data));
+        if(s){
+          applyingRemote = true;
+          state = s;
+          saveLocal();                                  // backup locale
+          render();
+          if(document.getElementById('present').classList.contains('on')) renderPresent();
+          applyingRemote = false;
+        }
+      } else if(isAdmin){
+        pushCloud();                                     // database vuoto: l'admin lo inizializza
+      }
+    }, err=>console.warn('cloud read err', err));
+  }catch(e){ cloudOn=false; console.warn('cloud init fail', e); }
+  updateTopbar();
+}
+let cloudTimer=null;
+function pushCloud(){
+  if(!cloudOn || !isAdmin || !db) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(()=>{
+    db.ref(CLOUD_PATH+'/state').set({
+      data: state, updatedBy: myId, updatedAt: firebase.database.ServerValue.TIMESTAMP
+    }).catch(e=>console.warn('cloud write err', e));
+  }, 250);
+}
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function promptAdmin(){
+  if(isAdmin){
+    if(confirm('Vuoi uscire dalla modalità admin e tornare in sola visione?')){
+      isAdmin=false; localStorage.removeItem('palioAdmin'); updateTopbar(); render(); badge(cloudOn?'view':'ok');
+    }
+    return;
+  }
+  const pw = prompt('Password admin per inserire/modificare i punteggi:');
+  if(pw==null) return;
+  if(await sha256(pw) === ADMIN_HASH){
+    isAdmin=true; localStorage.setItem('palioAdmin','1');
+    updateTopbar(); render(); badge('ok');
+    if(cloudOn && db) db.ref(CLOUD_PATH+'/state').once('value').then(s=>{ if(!(s.val()&&s.val().data)) pushCloud(); });
+  } else {
+    alert('Password errata.');
+  }
+}
+function updateTopbar(){
+  const cb=document.getElementById('cloudBadge'), ab=document.getElementById('adminBtn');
+  if(cb){
+    if(!cloudOn){ cb.textContent='⚪ Locale'; cb.className='cbadge'; cb.title='Database condiviso non disponibile: i dati restano su questo dispositivo.'; }
+    else if(cloudConnected){ cb.textContent='🟢 Live'; cb.className='cbadge live'; cb.title='Connesso: classifica condivisa in tempo reale.'; }
+    else { cb.textContent='🟡 Riconnessione…'; cb.className='cbadge off'; cb.title='Connessione al database in corso…'; }
+  }
+  if(ab){
+    if(!cloudOn){ ab.style.display='none'; }
+    else { ab.style.display=''; ab.textContent = isAdmin?'✏️ Admin':'🔒 Solo visione'; ab.className='cbadge btnlike'+(isAdmin?' admin':''); }
+  }
 }
 
 /* ===================== FUNZIONI PURE DI CALCOLO ===================== */
@@ -446,7 +573,7 @@ function viewGare(){
         `<option value="${n}" ${p===n?'selected':''}>${n}ª</option>`)).join('');
       const pts = p!=null ? `${fmtP(puntiPalio(g,c.id))}p · ${fmtD(puntiDrappo(g,c.id))}` : '';
       return `<td class="cell ${dup?'dup':''}" ${dup?'title="Pareggio: stessa posizione su più contrade (consentito)"':''}>
-        <select class="cell ${p!=null?'set':''}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}">${opts}</select>
+        <select class="cell ${p!=null?'set':''}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}" ${ED()}>${opts}</select>
         <span class="cellpts">${pts}</span></td>`;
     }).join('');
     const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
@@ -456,17 +583,19 @@ function viewGare(){
       <td class="colGara">
         <div class="gara-name">${label}</div>
         <div class="gara-cat">${nd?'<em>da disputare</em>':'&nbsp;'}</div>
-        <select class="tipo" data-action="tipo" data-gid="${g.id}" title="Tipo di punteggio (n. contrade partecipanti / competizione)">${tipoSel}</select>
+        <select class="tipo" data-action="tipo" data-gid="${g.id}" title="Tipo di punteggio (n. contrade partecipanti / competizione)" ${ED()}>${tipoSel}</select>
       </td>
       ${cells}
     </tr>`;
   }).join('');
   const footP = state.contrade.map(c=>`<td><span class="tp">${fmtP(totP[c.id])}</span><span class="td">Dr. ${fmtD(totD[c.id])}</span></td>`).join('');
-  const banner = configModificata()
+  const banner = (canEdit() && configModificata())
     ? `<div class="banner">⚠ Configurazione modificata rispetto ai valori predefiniti.
         <button class="btn sm" data-action="reset-all">Ripristina tutto</button></div>` : '';
+  const vnote = (cloudOn && !isAdmin)
+    ? `<div class="viewer-note">👁 <b>Sola visione</b> — i risultati li inserisce l'admin. La classifica si aggiorna da sola in tempo reale. (Sei l'organizzatore? Premi <b>🔒 Solo visione</b> in alto e inserisci la password.)</div>` : '';
   return `
-  ${banner}
+  ${vnote}${banner}
   <div class="card">
     <div class="sectionTitle"><h2>Gare &amp; Inserimento</h2>
       <span class="pill" style="border-color:var(--accent);color:var(--accent)">${disp.length}/${state.gare.length} gare disputate</span></div>
@@ -596,31 +725,32 @@ function niceStep(x){
 function viewConfig(){
   const C = state.contrade;
   const contRows = C.map(c=>`<tr>
-    <td><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}"></td>
-    <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}"></td>
-    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c1" value="${c.c1}"></td>
-    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c2" value="${c.c2}"></td>
-    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="chart" value="${c.chart}"></td>
+    <td><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}" ${ED()}></td>
+    <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}" ${ED()}></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c1" value="${c.c1}" ${ED()}></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c2" value="${c.c2}" ${ED()}></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="chart" value="${c.chart}" ${ED()}></td>
   </tr>`).join('');
 
   const head = TIPI.map(t=>`<th>${t}</th>`).join('');
   const pun128 = [1,2,3,4,5].map(pos=>{
-    const cells = TIPI.map(t=>`<td><input class="num" data-action="cfg-punti" data-tipo="${t}" data-idx="${pos-1}" value="${esc(String(state.tabellaPunti[t][pos-1]))}"></td>`).join('');
+    const cells = TIPI.map(t=>`<td><input class="num" data-action="cfg-punti" data-tipo="${t}" data-idx="${pos-1}" value="${esc(String(state.tabellaPunti[t][pos-1]))}" ${ED()}></td>`).join('');
     return `<tr><th>${pos}ª</th>${cells}</tr>`;
   }).join('');
 
   const gareRows = state.gare.map((g,i)=>{
     const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
-    return `<div class="ge-row" data-gid="${g.id}">
-      <div class="ge-num">${i+1}</div>
-      <input data-action="cfg-gara" data-gid="${g.id}" data-f="sport" value="${esc(g.sport)}" placeholder="Sport">
-      <input data-action="cfg-gara" data-gid="${g.id}" data-f="categoria" value="${esc(g.categoria)}" placeholder="Categoria">
-      <select class="ge-tipo" data-action="cfg-gara" data-gid="${g.id}" data-f="tipo">${tipoSel}</select>
-      <div class="ge-actions row" style="gap:4px">
+    const actions = canEdit() ? `<div class="ge-actions row" style="gap:4px">
         <button class="iconbtn" data-action="gara-up" data-gid="${g.id}" title="Su">▲</button>
         <button class="iconbtn" data-action="gara-down" data-gid="${g.id}" title="Giù">▼</button>
         <button class="iconbtn" data-action="gara-del" data-gid="${g.id}" title="Elimina">🗑</button>
-      </div>
+      </div>` : '<div></div>';
+    return `<div class="ge-row" data-gid="${g.id}">
+      <div class="ge-num">${i+1}</div>
+      <input data-action="cfg-gara" data-gid="${g.id}" data-f="sport" value="${esc(g.sport)}" placeholder="Sport" ${ED()}>
+      <input data-action="cfg-gara" data-gid="${g.id}" data-f="categoria" value="${esc(g.categoria)}" placeholder="Categoria" ${ED()}>
+      <select class="ge-tipo" data-action="cfg-gara" data-gid="${g.id}" data-f="tipo" ${ED()}>${tipoSel}</select>
+      ${actions}
     </div>`;
   }).join('');
 
@@ -646,7 +776,7 @@ function viewConfig(){
 
   <div class="card gare-edit">
     <div class="sectionTitle"><h2>Elenco Gare</h2>
-      <button class="btn sm gold" data-action="gara-add">+ Aggiungi gara</button></div>
+      ${canEdit()?'<button class="btn sm gold" data-action="gara-add">+ Aggiungi gara</button>':''}</div>
     <div class="ge-row" style="font-weight:700;color:var(--text-dim)">
       <div class="ge-num">#</div><div>Sport</div><div>Categoria</div><div>Tipo</div><div>Azioni</div></div>
     ${gareRows}
@@ -658,8 +788,8 @@ function viewConfig(){
     <div class="row">
       <button class="btn gold" data-action="export-json">⬇ Esporta JSON (backup)</button>
       <button class="btn" data-action="export-csv">⬇ Esporta CSV (Excel)</button>
-      <button class="btn" data-action="import-json">⬆ Importa JSON</button>
-      <button class="btn danger" data-action="reset-all">↺ Ripristina valori predefiniti</button>
+      ${canEdit()?'<button class="btn" data-action="import-json">⬆ Importa JSON</button>':''}
+      ${canEdit()?'<button class="btn danger" data-action="reset-all">↺ Ripristina valori predefiniti</button>':''}
     </div>
     <p class="hint">Il salvataggio è automatico in questo browser. Usa <b>Esporta JSON</b> per un backup completo o per spostare i dati su un altro dispositivo.
       Il <b>CSV</b> si apre direttamente in Excel (separatore «;», decimali con la virgola).</p>
@@ -777,6 +907,7 @@ document.addEventListener('click', e=>{
   const t = e.target.closest('[data-action]');
   if(!t) return;
   const a = t.dataset.action;
+  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json'].includes(a) && !canEdit()) return;
   switch(a){
     case 'nav':
       if(t.dataset.view==='present'){ openPresent(); return; }
@@ -818,6 +949,7 @@ document.addEventListener('change', e=>{
   const t = e.target.closest('[data-action]');
   if(!t) return;
   const a = t.dataset.action;
+  if(['pos','tipo','cfg-cont','cfg-punti','cfg-gara'].includes(a) && !canEdit()){ render(); return; }
   if(a==='pos'){
     const g = findGara(t.dataset.gid);
     g.pos[t.dataset.cid] = t.value==='' ? null : parseInt(t.value,10);
@@ -877,9 +1009,13 @@ function selfTest(){
 }
 
 /* ===================== AVVIO ===================== */
+isAdmin = (localStorage.getItem('palioAdmin')==='1');
 state = load() || defaults();
-if(!storageOk) badge('warn'); else badge('ok');
+initCloud();                              // attiva il cloud (cloudOn sincrono) prima del primo render
 render();
+updateTopbar();
+if(!storageOk) badge('warn'); else badge(cloudOn && !isAdmin ? 'view' : 'ok');
+document.getElementById('adminBtn').addEventListener('click', promptAdmin);
 try{ selfTest(); }catch(e){ console.warn('selfTest error', e); }
 
 })();
