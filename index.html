@@ -229,6 +229,7 @@
 <!-- Firebase (sincronizzazione condivisa in tempo reale). Se offline, l'app funziona in locale. -->
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script>
 (function(){
 "use strict";
@@ -359,12 +360,13 @@ const FIREBASE_CONFIG = {
   measurementId: "G-G62FQCK7MV"
 };
 const CLOUD_PATH = 'palio2026';
-// SHA-256 della password admin (nel sorgente c'è solo l'hash, non la password)
-const ADMIN_HASH = '1d6f1c6e5cadfe038e46365ac26fbbfb8323af3e23ad4d5665ae020dee3b117f';
+// L'admin entra con un vero login Firebase (email fissa + password, verificate da Firebase).
+// La password NON è nel codice: vive solo in Firebase Authentication.
+const ADMIN_EMAIL = 'admin@thepaliocalculator.it';
 const DEFAULT_WAIT_MSG = 'Torna Sabato sera per scoprire i risultati dopo la prima giornata di gare!';
 const REVEAL_PIN = '2026';   // PIN di conferma per pubblicare le classifiche al pubblico
 
-let db=null, cloudOn=false, cloudConnected=false, applyingRemote=false, cloudInited=false;
+let db=null, auth=null, stateRef=null, cloudOn=false, cloudConnected=false, applyingRemote=false, cloudInited=false;
 let publicData = null;   // contenuto del nodo /public (messaggio + snapshot pubblicato)
 let liveState = null;    // ultimo stato live ricevuto (per quando un visitatore diventa admin)
 const myId = 'c'+Math.random().toString(36).slice(2,10);
@@ -388,32 +390,48 @@ function initCloud(){
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
+    auth = firebase.auth ? firebase.auth() : null;
     cloudOn = true;
     db.ref('.info/connected').on('value', s=>{ cloudConnected=(s.val()===true); updateTopbar(); });
-    // STATO LIVE (dati di lavoro): sincronizzato e visibile solo agli admin
-    db.ref(CLOUD_PATH+'/state').on('value', snap=>{
-      const remote = snap.val();
-      if(!(remote && remote.data)){ if(isAdmin) pushCloud(); return; } // vuoto: l'admin lo inizializza
-      if(remote.updatedBy === myId) return;             // eco del nostro stesso aggiornamento
-      const s = migrate(normalizeState(remote.data));
-      if(!s) return;
-      liveState = s;                                    // memorizza sempre l'ultimo live
-      if(isAdmin){                                      // ma lo mostra solo l'admin
-        applyingRemote = true;
-        state = s; saveLocal(); render();
-        if(document.getElementById('present').classList.contains('on')) renderPresent();
-        applyingRemote = false;
-      }
-    }, err=>console.warn('cloud state err', err));
-    // PUBBLICAZIONE (snapshot congelato per il pubblico)
+    // PUBBLICAZIONE (snapshot congelato): leggibile da tutti
     db.ref(CLOUD_PATH+'/public').on('value', snap=>{
       publicData = snap.val();
       if(!isAdmin){ render(); if(document.getElementById('present').classList.contains('on')) renderPresent(); }
       else if(current==='config'){ render(); }          // aggiorna lo stato del pannello pubblicazione
     }, err=>console.warn('cloud public err', err));
+    // AUTENTICAZIONE: admin = utente loggato. Lo stato live è leggibile SOLO dagli admin.
+    if(auth){
+      auth.onAuthStateChanged(u=>{
+        isAdmin = !!u;
+        updateTopbar();
+        if(isAdmin) subscribeState(); else unsubscribeState();
+        render();
+        badge(cloudOn && !isAdmin ? 'view' : 'ok');
+      });
+    }
   }catch(e){ cloudOn=false; console.warn('cloud init fail', e); }
   updateTopbar();
 }
+// STATO LIVE (dati di lavoro): sottoscritto solo quando si è admin autenticati
+function subscribeState(){
+  if(!db || stateRef) return;
+  stateRef = db.ref(CLOUD_PATH+'/state');
+  stateRef.on('value', snap=>{
+    const remote = snap.val();
+    if(!(remote && remote.data)){ if(isAdmin) pushCloud(); return; } // vuoto: l'admin lo inizializza
+    if(remote.updatedBy === myId) return;               // eco del nostro stesso aggiornamento
+    const s = migrate(normalizeState(remote.data));
+    if(!s) return;
+    liveState = s;
+    if(isAdmin){
+      applyingRemote = true;
+      state = s; saveLocal(); render();
+      if(document.getElementById('present').classList.contains('on')) renderPresent();
+      applyingRemote = false;
+    }
+  }, err=>console.warn('state read err (permessi?)', err));
+}
+function unsubscribeState(){ if(stateRef){ stateRef.off(); stateRef=null; } }
 let cloudTimer=null;
 function pushCloud(){
   if(!cloudOn || !isAdmin || !db) return;
@@ -452,30 +470,22 @@ function resultsSig(s){
   });
 }
 
-async function sha256(str){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
 async function promptAdmin(){
+  if(!cloudOn || !auth){ alert('Login non disponibile (database offline).'); return; }
   if(isAdmin){
     if(confirm('Vuoi uscire dalla modalità admin e tornare in sola visione?')){
-      isAdmin=false; localStorage.removeItem('palioAdmin'); updateTopbar(); render(); badge(cloudOn?'view':'ok');
+      try{ await auth.signOut(); }catch(e){ console.warn('signout', e); }
     }
     return;
   }
   const pw = prompt('Password admin per inserire/modificare i punteggi:');
   if(pw==null) return;
-  if(await sha256(pw) === ADMIN_HASH){
-    isAdmin=true; localStorage.setItem('palioAdmin','1');
-    if(liveState) state = liveState;                 // mostra subito l'ultimo stato live noto
-    updateTopbar(); render(); badge('ok');
-    if(cloudOn && db) db.ref(CLOUD_PATH+'/state').once('value').then(s=>{
-      const v=s.val();
-      if(v && v.data){ const st=migrate(normalizeState(v.data)); if(st){ state=st; render(); } }
-      else pushCloud();                               // database vuoto: inizializza coi dati locali
-    });
-  } else {
-    alert('Password errata.');
+  try{
+    await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pw);
+    // il resto (isAdmin, sottoscrizione /state, render) è gestito da onAuthStateChanged
+  }catch(e){
+    alert('Password errata o accesso non riuscito.');
+    console.warn('login err', e && e.code);
   }
 }
 function updateTopbar(){
@@ -1129,7 +1139,7 @@ function selfTest(){
 }
 
 /* ===================== AVVIO ===================== */
-isAdmin = (localStorage.getItem('palioAdmin')==='1');
+isAdmin = false;                          // verrà impostato dal login Firebase (onAuthStateChanged)
 state = load() || defaults();
 initCloud();                              // attiva il cloud (cloudOn sincrono) prima del primo render
 render();
