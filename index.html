@@ -47,7 +47,14 @@
   .cbadge.btnlike.admin{color:#1a1205; background:linear-gradient(180deg,var(--accent-2),var(--accent)); border-color:var(--accent)}
   select:disabled, input:disabled{opacity:.5; cursor:not-allowed}
   .viewer-note{background:rgba(46,160,67,.10); border:1px solid var(--success); color:#9ae6b4; padding:9px 13px; border-radius:10px; margin-bottom:14px; font-size:.85rem}
-  @media (max-width:720px){ #topbar{position:static; justify-content:center; margin-top:10px} #saveBadge{position:static; display:inline-block; margin-top:8px} header{padding-bottom:12px} }
+  @media (max-width:720px){
+    header{padding:10px 12px}
+    header h1{font-size:1.45rem; letter-spacing:2px}
+    header p{font-size:.62rem; letter-spacing:2px; margin-top:2px}
+    #topbar{position:static; justify-content:center; margin-top:0; margin-bottom:6px}
+    #saveBadge{position:static; display:inline-block; margin-top:6px}
+    main{padding:14px 12px 50px}
+  }
   /* ---------- nav ---------- */
   nav{
     display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:12px;
@@ -185,6 +192,21 @@
   .bigstand .br .r{font-size:clamp(1.4rem,3vw,2.2rem); font-weight:800; color:var(--accent); text-align:center}
   .bigstand .br .n{font-family:Georgia,serif; font-weight:700; font-size:clamp(1.2rem,2.6vw,2rem)}
   .bigstand .br .t{font-size:clamp(1.3rem,2.8vw,2.1rem); font-weight:800; color:var(--accent)}
+  /* ---------- vista gare su mobile: schede invece della matrice ---------- */
+  .msport{font-family:Georgia,serif; font-weight:700; color:var(--accent); font-size:1.05rem; margin:16px 0 9px; padding:5px 0 5px 11px; border-left:4px solid var(--accent)}
+  .gcard{background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:11px 12px; margin-bottom:12px}
+  .gcard.nd{opacity:.8}
+  .gcard-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; padding-bottom:8px; border-bottom:1px solid var(--border)}
+  .gcard-title{font-weight:700; font-size:1rem}
+  .gcard-title .gnum{color:var(--text-dim); font-size:.82rem; margin-right:5px}
+  .gcard .tipo{min-width:104px}
+  .mrow{display:grid; grid-template-columns:1fr auto; column-gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05)}
+  .mrow:last-child{border-bottom:none}
+  .mrow.dup{outline:2px dashed var(--warn); outline-offset:3px; border-radius:6px}
+  .mname{display:flex; align-items:center; gap:9px; font-weight:600; font-size:.95rem}
+  .mname i{width:14px; height:14px; border-radius:50%; flex:none}
+  .mrow .cell{min-width:94px; font-size:1rem; padding:9px 8px}
+  .mpts{grid-column:1 / -1; font-size:.72rem; color:var(--accent); padding-top:2px; min-height:.3em}
   @media (max-width:640px){
     nav button{padding:7px 11px; font-size:.78rem}
     .srow{grid-template-columns:38px 1fr auto}
@@ -630,7 +652,55 @@ function viewWait(msg){
 }
 
 /* ===================== VISTA: GARE & INSERIMENTO ===================== */
+const isMobile = () => window.innerWidth < 760;
+
+// versione mobile: una scheda per gara (niente scroll orizzontale)
+function viewGareMobile(){
+  const C = state.contrade;
+  const disp = state.gare.filter(disputata);
+  const banner = (canEdit() && configModificata())
+    ? `<div class="banner">⚠ Configurazione modificata rispetto ai valori predefiniti.
+        <button class="btn sm" data-action="reset-all">Ripristina tutto</button></div>` : '';
+  let lastSport = null;
+  const cards = state.gare.map((g,i)=>{
+    const nd = !disputata(g);
+    let hdr = '';
+    if(g.sport !== lastSport){ lastSport = g.sport; hdr = `<div class="msport">${esc(g.sport)}</div>`; }
+    const counts = {};
+    C.forEach(c=>{ const p=g.pos[c.id]; if(p!=null) counts[p]=(counts[p]||0)+1; });
+    const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
+    const rows = C.map(c=>{
+      const p = g.pos[c.id];
+      const dup = p!=null && counts[p]>1;
+      const opts = ['<option value="">—</option>'].concat([1,2,3,4,5].map(n=>
+        `<option value="${n}" ${p===n?'selected':''}>${n}ª</option>`)).join('');
+      const pts = p!=null ? `${fmtP(puntiPalio(g,c.id))}p · ${fmtD(puntiDrappo(g,c.id))}` : '';
+      return `<div class="mrow ${dup?'dup':''}">
+        <span class="mname"><i style="background:linear-gradient(90deg,${c.c1},${c.c2})"></i>${esc(c.nome)}</span>
+        <select class="cell ${p!=null?'set':''}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}" ${ED()}>${opts}</select>
+        <span class="mpts">${pts}</span>
+      </div>`;
+    }).join('');
+    const label = esc(g.categoria) || esc(g.sport);
+    return hdr + `<div class="gcard ${nd?'nd':''}">
+      <div class="gcard-head">
+        <div class="gcard-title"><span class="gnum">${i+1}</span>${label}</div>
+        <select class="tipo" data-action="tipo" data-gid="${g.id}" title="Tipo di punteggio" ${ED()}>${tipoSel}</select>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+  return `${banner}
+  <div class="card">
+    <div class="sectionTitle"><h2>Gare &amp; Inserimento</h2>
+      <span class="pill" style="border-color:var(--accent);color:var(--accent)">${disp.length}/${state.gare.length} disputate</span></div>
+    ${cards}
+    <p class="hint">Posizione 1ª–5ª per contrada. <b>—</b> = gara non disputata. Chi è assente va messo <b>5ª</b>. I pareggi sono consentiti.</p>
+  </div>`;
+}
+
 function viewGare(){
+  if(isMobile()) return viewGareMobile();
   const {totP,totD,disp} = calcola();
   const C = state.contrade;
   const head = C.map(c=>`<th>
@@ -1116,6 +1186,13 @@ document.getElementById('importFile').addEventListener('change', function(){
 // scorciatoie presentazione
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape') closePresent();
+});
+
+// ri-render al passaggio mobile<->desktop (la vista Gare cambia layout)
+let _wasMobile = isMobile(), _resizeT = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_resizeT);
+  _resizeT = setTimeout(()=>{ if(isMobile()!==_wasMobile){ _wasMobile=isMobile(); render(); } }, 200);
 });
 
 /* ===================== AUTOTEST (console) ===================== */
