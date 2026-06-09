@@ -875,6 +875,18 @@ function niceStep(x){
 }
 
 /* ===================== VISTA: IMPOSTAZIONI ===================== */
+// MODALITÀ DEMO: riempie tutte le gare con punteggi casuali (permutazione 1ª-5ª per gara)
+function demoFill(){
+  const n = state.contrade.length;
+  state.gare.forEach(g=>{
+    const positions = Array.from({length:n}, (_,i)=> Math.min(i+1,5));
+    for(let i=positions.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=positions[i]; positions[i]=positions[j]; positions[j]=t; }
+    g.pos = {};
+    state.contrade.forEach((c,idx)=> g.pos[c.id]=positions[idx]);
+  });
+  save(); render();
+}
+
 function buildPubCard(){
   if(!cloudOn) return '';
   const pd = publicData||{};
@@ -979,7 +991,13 @@ function viewConfig(){
     </div>
     <p class="hint">Il salvataggio è automatico in questo browser. Usa <b>Esporta JSON</b> per un backup completo o per spostare i dati su un altro dispositivo.
       Il <b>CSV</b> si apre direttamente in Excel (separatore «;», decimali con la virgola).</p>
-  </div>`;
+  </div>
+
+  ${canEdit() ? `<div class="card">
+    <div class="sectionTitle"><h2>🎲 Modalità demo</h2></div>
+    <p class="hint">Riempie <b>tutte</b> le gare con punteggi <b>casuali</b>, all'istante — utile per provare l'app, i grafici e la presentazione. ⚠️ <b>Sovrascrive</b> i risultati attuali. Protetta da PIN.</p>
+    <button class="btn" data-action="demo-fill">🎲 Riempi tutto a caso (demo)</button>
+  </div>` : ''}`;
 }
 
 /* ===================== PRESENTAZIONE ===================== */
@@ -1093,7 +1111,7 @@ document.addEventListener('click', e=>{
   const t = e.target.closest('[data-action]');
   if(!t) return;
   const a = t.dataset.action;
-  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json','pub-reveal','pub-hide'].includes(a) && !canEdit()) return;
+  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json','pub-reveal','pub-hide','demo-fill'].includes(a) && !canEdit()) return;
   switch(a){
     case 'nav':
       if(t.dataset.view==='present'){ openPresent(); return; }
@@ -1112,6 +1130,13 @@ document.addEventListener('click', e=>{
     case 'pub-hide':
       if(confirm('Nascondere le classifiche al pubblico?\n\nTornerà a vedere il messaggio di attesa.')) publishHide();
       break;
+    case 'demo-fill': {
+      const pin = prompt('MODALITÀ DEMO — riempie TUTTE le gare con punteggi casuali (sovrascrive i risultati attuali).\n\nInserisci il PIN per continuare:');
+      if(pin==null) break;
+      if(pin.trim() !== REVEAL_PIN){ alert('PIN errato. Operazione annullata.'); break; }
+      demoFill();
+      break;
+    }
     case 'export-json': exportJSON(); break;
     case 'export-csv': exportCSV(); break;
     case 'import-json': importJSON(); break;
