@@ -1140,11 +1140,13 @@ document.addEventListener('click', e=>{
     case 'export-json': exportJSON(); break;
     case 'export-csv': exportCSV(); break;
     case 'import-json': importJSON(); break;
-    case 'reset-all':
-      if(confirm('Ripristinare tutti i valori predefiniti?\n\nQuesto cancella TUTTI i risultati inseriti e ripristina contrade, tabella punti ed elenco gare.')){
-        state = defaults(); save(); render();
-      }
+    case 'reset-all': {
+      const pin = prompt('RIPRISTINO — cancella TUTTI i risultati inseriti e ripristina contrade, tabella punti ed elenco gare.\n\nInserisci il PIN per continuare:');
+      if(pin==null) break;
+      if(pin.trim() !== REVEAL_PIN){ alert('PIN errato. Ripristino annullato.'); break; }
+      state = defaults(); save(); render();
       break;
+    }
     case 'gara-add':
       state.gare.push({id:uid(), sport:'Nuova gara', categoria:'', tipo:'Punti 4', pos:emptyPos()});
       save(); render();
