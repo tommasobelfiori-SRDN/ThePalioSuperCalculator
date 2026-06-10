@@ -213,6 +213,29 @@
     .gare-edit .ge-row{grid-template-columns:24px 1fr 1fr; }
     .gare-edit .ge-row .ge-tipo, .gare-edit .ge-row .ge-actions{grid-column:span 3; justify-self:start}
   }
+  /* ---------- albo d'oro e capitani ---------- */
+  .albo-wrap{overflow:auto; border:1px solid var(--border); border-radius:12px}
+  table.albo{border-collapse:separate; border-spacing:0; width:100%; min-width:680px; font-size:.85rem}
+  table.albo th, table.albo td{padding:9px 10px; border-bottom:1px solid var(--border); text-align:center}
+  table.albo thead th{background:var(--bg-3); border-bottom:2px solid var(--accent); font-size:.78rem; letter-spacing:.5px}
+  table.albo td.anno{font-weight:800; color:var(--accent); background:var(--bg-3)}
+  table.albo td.win-p{background:linear-gradient(180deg,#f2c94c,#cfa52f); color:#1a1205; font-weight:700}
+  table.albo td.win-d{background:linear-gradient(180deg,#dde3e9,#9fa9b3); color:#10151b; font-weight:700}
+  table.albo td.win-pd{background:linear-gradient(135deg,#f2c94c 0%,#d4af37 46%,#dde3e9 54%,#9fa9b3 100%); color:#10151b; font-weight:800}
+  .albo-legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:.78rem; color:var(--text-dim)}
+  .albo-legend i{display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:5px}
+  .honor{display:flex; flex-direction:column; gap:8px}
+  .honor .hrow{display:flex; align-items:center; gap:12px; background:var(--bg-3); border:1px solid var(--border); border-left:5px solid var(--cc); border-radius:10px; padding:9px 12px}
+  .honor .hcount{font-weight:800; color:var(--accent); font-size:1.15rem; min-width:24px; text-align:center}
+  .honor .hname{font-weight:700; font-family:Georgia,serif; min-width:90px}
+  .honor .hyears{font-size:.78rem; color:var(--text-dim)}
+  .acard{background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:10px}
+  .acard h3{margin:0 0 8px; color:var(--accent); font-size:1rem}
+  .acard .arow{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 9px; border-radius:8px; margin-bottom:4px; font-size:.86rem}
+  .acard .arow .an{font-weight:600}
+  .acard .arow.win-p{background:linear-gradient(180deg,#f2c94c,#cfa52f); color:#1a1205; font-weight:700}
+  .acard .arow.win-d{background:linear-gradient(180deg,#dde3e9,#9fa9b3); color:#10151b; font-weight:700}
+  .acard .arow.win-pd{background:linear-gradient(135deg,#f2c94c 0%,#d4af37 46%,#dde3e9 54%,#9fa9b3 100%); color:#10151b; font-weight:800}
   /* stampa */
   @media print{
     nav,#saveBadge,.no-print,#present{display:none!important}
@@ -305,6 +328,21 @@ const GARE_DEF = [
   ['Scacchi','Adulti','Punti 5'],
   ['Burraco','Mix','Punti B'],
   ['Gara torte','Mix','Punti T'],
+];
+
+// Albo d'oro e capitani (Palio Malaspina). palio/drappo = id contrada vincitrice (null = non assegnato)
+const ALBO_COLS = ['lago','giardini','andromeda','bosco','sagittario'];
+const ALBO = [
+  {anno:'2014', cap:{lago:'Marco Battiston',   giardini:'Emanuele Garbagnati', andromeda:'Michele Molfino',     bosco:'Marco Grillo',       sagittario:'Giuseppe Belfiori'}, palio:'giardini', drappo:null},
+  {anno:'2015', cap:{lago:'Emanuele Casciano', giardini:'Michele Moroni',      andromeda:'Paolo Casiroli',      bosco:'Marco Grillo',       sagittario:'Paolo Ordesi'},      palio:'bosco',    drappo:null},
+  {anno:'2016', cap:{lago:'Emanuele Casciano', giardini:'Michele Moroni',      andromeda:'Paolo Casiroli',      bosco:'Marco Grillo',       sagittario:'Paolo Ordesi'},      palio:'giardini', drappo:null},
+  {anno:'2017', cap:{lago:'Stefano Eibestain', giardini:'Maurizio Risoluto',   andromeda:'Paolo Casiroli',      bosco:'Mara Picchioni',     sagittario:'Davide Valanà'},     palio:'lago',     drappo:null},
+  {anno:'2018', cap:{lago:'Stefano Eibestain', giardini:'Maurizio Risoluto',   andromeda:'Mario Viappiani',     bosco:'Mario Capuano',      sagittario:'Davide Valanà'},     palio:'lago',     drappo:null},
+  {anno:'2019', cap:{lago:'Claudia Caneva',    giardini:'Clara Agrillo',       andromeda:'Eliana Marchiò',      bosco:'Simona Augi',        sagittario:'Julia Krauze'},      palio:'lago',     drappo:'lago'},
+  {anno:'2023', cap:{lago:'Daniela Dafano',    giardini:'Francesca Cirone',    andromeda:'Chiara Cappelleri',   bosco:'Valentina Daietti',  sagittario:'Vittoria Cojazzi'},  palio:'giardini', drappo:'andromeda'},
+  {anno:'2024', cap:{lago:'Matteo Masserani',  giardini:'Michele Moroni',      andromeda:'Laura May',           bosco:'Riccardo Gigliotti', sagittario:'Vittoria Cojazzi'},  palio:'lago',     drappo:'sagittario'},
+  {anno:'2025', cap:{lago:'Matteo Masserani',  giardini:'Clara Agrillo',       andromeda:'Chiara Martinazzoli', bosco:'Riccardo Gigliotti', sagittario:'Martina Novini'},    palio:'giardini', drappo:'sagittario'},
+  {anno:'2026', cap:{lago:'Matteo Masserani',  giardini:'Marzia Rossi',        andromeda:'Pietro Distefano',    bosco:'Roberto Paradiso',   sagittario:'Martina Novini'},    palio:null,       drappo:null},
 ];
 
 const STATE_VERSION = 1;
@@ -591,6 +629,7 @@ const VIEWS = [
   {id:'palio',    label:'🏆 Classifica Palio'},
   {id:'drappo',   label:'🛡️ Classifica Drappo'},
   {id:'grafici',  label:'📈 Grafici'},
+  {id:'albo',     label:"🏅 Albo d'Oro"},
   {id:'config',   label:'⚙ Impostazioni'},
   {id:'present',  label:'🖥 Presentazione'},
 ];
@@ -611,6 +650,7 @@ function render(){
   else if(current==='palio')  app.innerHTML = viewClassifica('palio');
   else if(current==='drappo') app.innerHTML = viewClassifica('drappo');
   else if(current==='grafici')app.innerHTML = viewGrafici();
+  else if(current==='albo')   app.innerHTML = viewAlbo();
   else if(current==='config') app.innerHTML = viewConfig();
   if(current==='gare') restoreMatrixScroll(prevScroll);
   if(current==='grafici') drawCharts();
@@ -622,19 +662,23 @@ function restoreMatrixScroll(x){ const w=document.querySelector('.matrix-wrap');
 /* ===================== VISTA PUBBLICA (visitatori) ===================== */
 function renderViewer(){
   const nav = document.getElementById('nav'), app = document.getElementById('app');
-  const allowed = ['palio','drappo','grafici'];
-  if(!publicData || publicData.revealed!==true){
-    nav.style.display='none';
+  const revealed = !!(publicData && publicData.revealed===true);
+  // l'Albo d'Oro è sempre accessibile, anche a risultati nascosti
+  const items = revealed
+    ? VIEWS.filter(v=>['palio','drappo','grafici','albo'].includes(v.id))
+    : [{id:'attesa', label:'🏆 Risultati'}, {id:'albo', label:"🏅 Albo d'Oro"}];
+  if(!items.some(v=>v.id===current)) current = revealed ? 'palio' : 'attesa';
+  nav.style.display='';
+  nav.innerHTML = items.map(v=>
+    `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`).join('');
+  if(current==='albo'){ app.innerHTML = viewAlbo(); return; }
+  if(!revealed){
     app.innerHTML = viewWait(publicData && publicData.message);
     return;
   }
   // usa lo snapshot pubblicato (congelato) per i calcoli
   const snap = migrate(normalizeState(JSON.parse(JSON.stringify(publicData.snapshot||{}))));
   if(snap) state = snap;
-  if(!allowed.includes(current)) current='palio';
-  nav.style.display='';
-  nav.innerHTML = VIEWS.filter(v=>allowed.includes(v.id)).map(v=>
-    `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`).join('');
   const lab = publicData.label && publicData.label.trim() ? publicData.label : 'Classifica ufficiale';
   const at = publicData.at ? (' · aggiornata al '+fmtTime(publicData.at)) : '';
   const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b>${at}</div>`;
@@ -648,6 +692,76 @@ function viewWait(msg){
     <div style="font-size:3.6rem; line-height:1">🏆</div>
     <h2 style="color:var(--accent); font-size:clamp(1.3rem,3.2vw,2rem); margin:16px auto 10px; max-width:680px">${esc(msg||DEFAULT_WAIT_MSG)}</h2>
     <p class="muted">Le classifiche saranno svelate dall'organizzazione. Tieni d'occhio questa pagina!</p>
+  </div>`;
+}
+
+/* ===================== VISTA: ALBO D'ORO E CAPITANI ===================== */
+function viewAlbo(){
+  const cinfo = cid => state.contrade.find(c=>c.id===cid) || {nome:cid, chart:'#888'};
+  // albi calcolati dalle vittorie: oro = Palio, argento = Drappo
+  const wins = {};
+  ALBO.forEach(r=>{
+    if(r.palio){ (wins[r.palio]=wins[r.palio]||{p:[],d:[]}).p.push(r.anno); }
+    if(r.drappo){ (wins[r.drappo]=wins[r.drappo]||{p:[],d:[]}).d.push(r.anno); }
+  });
+  const honor = key => Object.entries(wins).filter(([,w])=>w[key].length)
+    .sort((a,b)=> (b[1][key].length-a[1][key].length) || cinfo(a[0]).nome.localeCompare(cinfo(b[0]).nome,'it'))
+    .map(([cid,w])=>{
+      const c=cinfo(cid);
+      return `<div class="hrow" style="--cc:${c.chart}">
+        <span class="hcount">${w[key].length}</span>
+        <span class="hname" style="color:${c.chart}">${esc(c.nome)}</span>
+        <span class="hyears">${w[key].join(' · ')}</span></div>`;
+    }).join('') || '<p class="muted">Ancora nessuna vittoria.</p>';
+
+  const cellInfo = (r,cid)=>{
+    const both = r.palio===cid && r.drappo===cid;
+    return {
+      cls: both?'win-pd':(r.palio===cid?'win-p':(r.drappo===cid?'win-d':'')),
+      badge: both?' 🏆🛡️':(r.palio===cid?' 🏆':(r.drappo===cid?' 🛡️':''))
+    };
+  };
+  const head = ALBO_COLS.map(cid=>{const c=cinfo(cid);
+    return `<th><span style="color:${c.chart}">${esc(c.nome)}</span></th>`;}).join('');
+  const rows = ALBO.map(r=>{
+    const cells = ALBO_COLS.map(cid=>{
+      const {cls,badge}=cellInfo(r,cid);
+      return `<td class="${cls}">${esc(r.cap[cid]||'')}${badge}</td>`;
+    }).join('');
+    return `<tr><td class="anno">${r.anno}</td>${cells}</tr>`;
+  }).join('');
+  const cards = ALBO.map(r=>{
+    const rws = ALBO_COLS.map(cid=>{
+      const c=cinfo(cid);
+      const {cls,badge}=cellInfo(r,cid);
+      return `<div class="arow ${cls}">
+        <span class="an" ${cls?'':`style="color:${c.chart}"`}>${esc(c.nome)}</span>
+        <span>${esc(r.cap[cid]||'')}${badge}</span></div>`;
+    }).join('');
+    return `<div class="acard"><h3>${r.anno}</h3>${rws}</div>`;
+  }).join('');
+  const legend = `<div class="albo-legend">
+    <span><i style="background:linear-gradient(180deg,#f2c94c,#cfa52f)"></i>Vittoria Palio 🏆</span>
+    <span><i style="background:linear-gradient(180deg,#dde3e9,#9fa9b3)"></i>Vittoria Drappo 🛡️</span>
+    <span><i style="background:linear-gradient(135deg,#f2c94c,#d4af37 46%,#dde3e9 54%,#9fa9b3)"></i>Doppietta (Palio + Drappo)</span>
+  </div>`;
+  return `
+  <div class="grid2">
+    <div class="card">
+      <div class="sectionTitle"><h2>🏆 Albo d'Oro · Palio</h2></div>
+      <div class="honor">${honor('p')}</div>
+    </div>
+    <div class="card">
+      <div class="sectionTitle"><h2>🛡️ Albo d'Oro · Drappo</h2></div>
+      <div class="honor">${honor('d')}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sectionTitle"><h2>Capitani · Palio Malaspina</h2></div>
+    ${isMobile() ? cards : `<div class="albo-wrap"><table class="albo">
+      <thead><tr><th>Edizione</th>${head}</tr></thead>
+      <tbody>${rows}</tbody></table></div>`}
+    ${legend}
   </div>`;
 }
 
