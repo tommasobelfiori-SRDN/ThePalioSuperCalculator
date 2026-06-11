@@ -463,9 +463,10 @@ function saveLocal(){
 }
 function badge(mode){
   const el = document.getElementById('saveBadge');
+  el.style.display='';
   if(mode==='saving'){ el.textContent='Salvataggio…'; el.className=''; }
   else if(mode==='ok'){ el.textContent='Salvato ✓'; el.className='ok'; }
-  else if(mode==='view'){ el.textContent='👁 Sola visione'; el.className=''; }
+  else if(mode==='view'){ el.style.display='none'; }   // il pubblico non vede alcun badge
   else if(mode==='warn'){ el.textContent='⚠ Memoria temporanea'; el.className='warn'; el.title='localStorage non disponibile: i dati restano solo finché la pagina è aperta. Usa Esporta JSON per il backup.'; }
 }
 
