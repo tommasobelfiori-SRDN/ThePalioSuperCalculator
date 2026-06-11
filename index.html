@@ -75,8 +75,12 @@
   .iban{font-family:ui-monospace,Menlo,Consolas,monospace; background:var(--bg-1); border:1px dashed var(--accent); padding:10px; border-radius:8px; font-size:.9rem; letter-spacing:.5px; word-break:break-all; text-align:center; margin:10px 0}
   .don-row{font-size:.87rem; margin:7px 0; color:var(--text); line-height:1.5}
   .don-row b{color:var(--accent-2)}
-  .qr-ph{border:2px dashed var(--border); border-radius:12px; padding:30px 12px; text-align:center; color:var(--text-dim); font-size:.88rem; line-height:1.6}
-  .qr-img{display:block; width:210px; max-width:100%; margin:10px auto; border-radius:12px; background:#fff; padding:8px}
+  .btn-satispay{
+    display:block; text-align:center; background:#f94c43; color:#fff; font-weight:800;
+    border-radius:10px; padding:13px 12px; text-decoration:none; font-size:1.02rem; margin-top:12px;
+    box-shadow:0 3px 12px rgba(249,76,67,.35); transition:.15s;
+  }
+  .btn-satispay:hover{background:#e03e36; transform:translateY(-1px)}
   .don-close{position:absolute; top:12px; right:12px}
   @media (max-width:720px){
     header{padding:10px 12px}
@@ -741,12 +745,8 @@ function viewWait(msg){
 
 /* ===================== DONAZIONI ===================== */
 const DON_IBAN = 'IT78H0301503200000003582259';
-const SATISPAY_QR = null; // data-URI del QR Satispay (quando disponibile, la card lo mostra al posto del segnaposto)
+const DON_SATISPAY = 'https://web.satispay.com/download/qrcode/S6Y-CON--3FC8BE03-1A1A-41FC-AFDE-A727DD84E3D9?';
 function openDonate(){
-  const qrPart = SATISPAY_QR
-    ? `<img class="qr-img" src="${SATISPAY_QR}" alt="QR code Satispay">
-       <div class="don-row" style="text-align:center">Inquadra il QR con la fotocamera del telefono<br>e dona con <b>Satispay</b>.</div>`
-    : `<div class="qr-ph">📱 QR code Satispay<br><b>in arrivo a breve</b></div>`;
   document.getElementById('donGrid').innerHTML = `
     <div class="don-card">
       <h3>🏦 Bonifico bancario</h3>
@@ -757,7 +757,8 @@ function openDonate(){
     </div>
     <div class="don-card">
       <h3>📱 Satispay</h3>
-      ${qrPart}
+      <div class="don-row">Dona in pochi secondi dal telefono: tocca il pulsante e completa la donazione con l'app <b>Satispay</b>.</div>
+      <a class="btn-satispay" href="${DON_SATISPAY}" target="_blank" rel="noopener">❤️ Dona con Satispay</a>
     </div>`;
   document.getElementById('donate').classList.add('on');
 }
