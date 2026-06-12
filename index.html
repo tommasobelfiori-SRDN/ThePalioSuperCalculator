@@ -60,6 +60,22 @@
     display:inline-block; margin-top:10px; background:#1a1205; color:var(--accent-2);
     padding:7px 16px; border-radius:20px; font-size:.85rem; font-weight:700; letter-spacing:.3px;
   }
+  /* ---------- annuncio vincitore (banner celebrativo) ---------- */
+  .announce{
+    position:relative; overflow:hidden; text-align:center;
+    border:2px solid var(--accent); border-radius:16px; padding:26px 18px 20px; margin-bottom:18px;
+    background:radial-gradient(620px 220px at 50% -40%, rgba(212,175,55,.22), transparent 60%), var(--bg-2);
+    box-shadow:0 6px 26px rgba(212,175,55,.18);
+  }
+  .announce .a-k{font-size:.78rem; letter-spacing:3px; color:var(--accent); text-transform:uppercase; font-weight:700}
+  .announce .a-gara{font-family:Georgia,serif; font-size:clamp(1rem,2.6vw,1.3rem); color:var(--text); margin:8px 0 2px}
+  .announce .a-win{font-family:Georgia,serif; font-weight:800; font-size:clamp(1.7rem,6vw,2.7rem); margin:4px 0 6px; line-height:1.15}
+  .announce .a-sub{color:var(--text-dim); font-size:.78rem}
+  .confetti{position:absolute; top:-20px; width:8px; height:14px; border-radius:2px; opacity:.9; pointer-events:none; animation:confFall linear infinite}
+  @keyframes confFall{
+    0%{transform:translateY(-20px) rotate(0deg)}
+    100%{transform:translateY(380px) rotate(560deg)}
+  }
   /* ---------- finestra donazioni ---------- */
   #donate{
     position:fixed; inset:0; z-index:120; background:rgba(7,9,13,.86);
@@ -734,8 +750,9 @@ function renderViewer(){
   nav.innerHTML = items.map(v=>
     `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`).join('');
   if(current==='albo'){ app.innerHTML = viewAlbo(); return; }
+  const ann = announceBanner();
   if(!revealed){
-    app.innerHTML = viewWait(publicData && publicData.message);
+    app.innerHTML = ann + viewWait(publicData && publicData.message);
     return;
   }
   // usa lo snapshot pubblicato (congelato) per i calcoli
@@ -744,9 +761,9 @@ function renderViewer(){
   const lab = publicData.label && publicData.label.trim() ? publicData.label : 'Classifica ufficiale';
   const at = publicData.at ? (' · aggiornata al '+fmtTime(publicData.at)) : '';
   const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b>${at}</div>`;
-  if(current==='palio')       app.innerHTML = banner+viewClassifica('palio');
-  else if(current==='drappo') app.innerHTML = banner+viewClassifica('drappo');
-  else if(current==='grafici')app.innerHTML = banner+viewGrafici();
+  if(current==='palio')       app.innerHTML = ann+banner+viewClassifica('palio');
+  else if(current==='drappo') app.innerHTML = ann+banner+viewClassifica('drappo');
+  else if(current==='grafici')app.innerHTML = ann+banner+viewGrafici();
   if(current==='grafici') drawCharts();
 }
 function viewWait(msg){
@@ -789,6 +806,57 @@ function copyText(txt){
     try{ document.execCommand('copy'); res(); }catch(e){ rej(e); }
     document.body.removeChild(ta);
   });
+}
+
+/* ===================== ANNUNCIO VINCITORE (pubblico) ===================== */
+function confettiHTML(colors, n){
+  n = n || 46;
+  let s = '';
+  for(let i=0;i<n;i++){
+    const c = colors[i % colors.length];
+    const left = Math.random()*100;
+    const dur = 2.8 + Math.random()*2.8;
+    const delay = -(Math.random()*dur);            // negativo: pioggia già in corso al primo render
+    const w = 6 + Math.random()*5, h = 10 + Math.random()*8;
+    s += `<i class="confetti" style="left:${left.toFixed(1)}%;background:${c};width:${w.toFixed(0)}px;height:${h.toFixed(0)}px;animation-duration:${dur.toFixed(2)}s;animation-delay:${delay.toFixed(2)}s"></i>`;
+  }
+  return s;
+}
+function announceBanner(){
+  const a = publicData && publicData.announce;
+  if(!(a && a.active && a.winners)) return '';
+  const ws = Array.isArray(a.winners) ? a.winners : Object.values(a.winners);
+  if(!ws.length) return '';
+  const colors = [...new Set(ws.flatMap(w=>[w.c1,w.c2]).concat(['#d4af37','#ffffff']))];
+  const names = ws.map(w=>`<span style="background:linear-gradient(90deg,${w.c1},${w.c2});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(w.nome)}</span>`);
+  const verb = ws.length>1 ? 'Vincono' : 'Vince';
+  return `<div class="announce">${confettiHTML(colors)}
+    <div class="a-k">🎉 Vincitore 🎉</div>
+    <div class="a-gara">${esc(a.gara||'')}</div>
+    <div class="a-win">${verb} ${names.join(' e ')}!</div>
+    ${a.at?`<div class="a-sub">${fmtTime(a.at)}</div>`:''}
+  </div>`;
+}
+function buildAnnCard(){
+  if(!cloudOn) return '';
+  const a = publicData && publicData.announce;
+  const status = (a && a.active)
+    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Attivo: ${esc(a.gara||'')}</span>`
+    : `<span class="pill" style="border-color:var(--border);color:var(--text-dim)">⚪ Nessun annuncio</span>`;
+  const opts = state.gare.map(g=>{
+    const w = state.contrade.filter(c=>g.pos[c.id]===1).map(c=>c.nome);
+    const label = `${g.sport}${g.categoria?(' · '+g.categoria):''}`;
+    return `<option value="${g.id}">${esc(label)}${w.length?(' — 1º: '+esc(w.join(', '))):' — (nessun 1º)'}</option>`;
+  }).join('');
+  return `<div class="card">
+    <div class="sectionTitle"><h2>📣 Annuncio vincitore (pubblico)</h2> ${status}</div>
+    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli 🎉) per il vincitore della gara scelta — chi è in <b>1ª posizione</b>. Resta visibile finché non lo rimuovi o lo sostituisci con un altro.</p>
+    <div class="row" style="margin-top:10px">
+      <select class="tipo" data-action="ann-gara" style="min-width:250px; max-width:100%">${opts}</select>
+      <button class="btn gold" data-action="ann-publish">📣 Annuncia al pubblico</button>
+      <button class="btn" data-action="ann-clear">🙈 Rimuovi annuncio</button>
+    </div>
+  </div>`;
 }
 
 /* ===================== VISTA: ALBO D'ORO E CAPITANI ===================== */
@@ -1131,6 +1199,7 @@ function buildPubCard(){
 function viewConfig(){
   const C = state.contrade;
   const pubCard = buildPubCard();
+  const annCard = buildAnnCard();
   const contRows = C.map(c=>`<tr>
     <td><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}" ${ED()}></td>
     <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}" ${ED()}></td>
@@ -1163,6 +1232,7 @@ function viewConfig(){
 
   return `
   ${pubCard}
+  ${annCard}
   <div class="grid2">
     <div class="card">
       <div class="sectionTitle"><h2>Contrade &amp; Coefficienti</h2></div>
@@ -1321,7 +1391,7 @@ document.addEventListener('click', e=>{
   const t = e.target.closest('[data-action]');
   if(!t) return;
   const a = t.dataset.action;
-  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json','pub-reveal','pub-hide','demo-fill'].includes(a) && !canEdit()) return;
+  if(['reset-all','gara-add','gara-del','gara-up','gara-down','import-json','pub-reveal','pub-hide','demo-fill','ann-publish','ann-clear'].includes(a) && !canEdit()) return;
   switch(a){
     case 'nav':
       if(t.dataset.view==='present'){ openPresent(); return; }
@@ -1350,6 +1420,24 @@ document.addEventListener('click', e=>{
     }
     case 'pub-hide':
       if(confirm('Nascondere le classifiche al pubblico?\n\nTornerà a vedere il messaggio di attesa.')) publishHide();
+      break;
+    case 'ann-publish': {
+      const sel = document.querySelector('select[data-action="ann-gara"]');
+      const g = sel ? findGara(sel.value) : null;
+      if(!g) break;
+      const ws = state.contrade.filter(c=>g.pos[c.id]===1).map(c=>({nome:c.nome, c1:c.c1, c2:c.c2}));
+      if(!ws.length){ alert('Per questa gara non è stata inserita nessuna 1ª posizione.'); break; }
+      const label = `${g.sport}${g.categoria?(' · '+g.categoria):''}`;
+      if(confirm(`Annunciare al pubblico la vittoria di ${ws.map(w=>w.nome).join(' e ')} in "${label}"?\n\nApparirà un banner di festeggiamento sulla home del sito.`)){
+        db.ref(CLOUD_PATH+'/public/announce').set({
+          active:true, gara:label, winners:ws, at:firebase.database.ServerValue.TIMESTAMP
+        }).catch(e=>console.warn('ann err', e));
+      }
+      break; }
+    case 'ann-clear':
+      if(confirm('Rimuovere l\'annuncio del vincitore dal sito pubblico?')){
+        db.ref(CLOUD_PATH+'/public/announce').update({active:false}).catch(e=>console.warn('ann clear err', e));
+      }
       break;
     case 'demo-fill': {
       const pin = prompt('MODALITÀ DEMO — riempie TUTTE le gare con punteggi casuali (sovrascrive i risultati attuali).\n\nInserisci il PIN per continuare:');
