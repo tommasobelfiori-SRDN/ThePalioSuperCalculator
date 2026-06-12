@@ -71,6 +71,7 @@
   .announce .a-gara{font-family:Georgia,serif; font-size:clamp(1rem,2.6vw,1.3rem); color:var(--text); margin:8px 0 2px}
   .announce .a-win{font-family:Georgia,serif; font-weight:800; font-size:clamp(1.7rem,6vw,2.7rem); margin:4px 0 6px; line-height:1.15}
   .announce .a-sub{color:var(--text-dim); font-size:.78rem}
+  .announce .a-block + .a-block{margin-top:16px; padding-top:16px; border-top:1px solid rgba(212,175,55,.35)}
   .confetti{position:absolute; top:-20px; width:8px; height:14px; border-radius:2px; opacity:.9; pointer-events:none; animation:confFall linear infinite}
   @keyframes confFall{
     0%{transform:translateY(-20px) rotate(0deg)}
@@ -824,35 +825,51 @@ function confettiHTML(colors, n){
 }
 function announceBanner(){
   const a = publicData && publicData.announce;
-  if(!(a && a.active && a.winners)) return '';
-  const ws = Array.isArray(a.winners) ? a.winners : Object.values(a.winners);
-  if(!ws.length) return '';
-  const colors = [...new Set(ws.flatMap(w=>[w.c1,w.c2]).concat(['#d4af37','#ffffff']))];
-  const names = ws.map(w=>`<span style="background:linear-gradient(90deg,${w.c1},${w.c2});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(w.nome)}</span>`);
-  const verb = ws.length>1 ? 'Vincono' : 'Vince';
+  if(!(a && a.active && a.items)) return '';
+  const items = Array.isArray(a.items) ? a.items : Object.values(a.items);
+  if(!items.length) return '';
+  const allWinners = it => Array.isArray(it.winners) ? it.winners : Object.values(it.winners||{});
+  const colors = [...new Set(items.flatMap(it=>allWinners(it).flatMap(w=>[w.c1,w.c2])).concat(['#d4af37','#ffffff']))];
+  const blocks = items.map(it=>{
+    const ws = allWinners(it);
+    if(!ws.length) return '';
+    const names = ws.map(w=>`<span style="background:linear-gradient(90deg,${w.c1},${w.c2});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(w.nome)}</span>`);
+    const verb = ws.length>1 ? 'Vincono' : 'Vince';
+    const icon = it.tipo==='drappo' ? '🛡️' : '🏆';
+    const tit  = it.tipo==='drappo' ? 'Vincitore del Drappo' : 'Vincitore del Palio';
+    return `<div class="a-block">
+      <div class="a-k">${icon} ${tit} ${icon}</div>
+      <div class="a-win">${verb} ${names.join(' e ')}!</div>
+    </div>`;
+  }).join('');
   return `<div class="announce">${confettiHTML(colors)}
-    <div class="a-k">🎉 Vincitore 🎉</div>
-    <div class="a-gara">${esc(a.gara||'')}</div>
-    <div class="a-win">${verb} ${names.join(' e ')}!</div>
+    ${blocks}
     ${a.at?`<div class="a-sub">${fmtTime(a.at)}</div>`:''}
   </div>`;
 }
 function buildAnnCard(){
   if(!cloudOn) return '';
   const a = publicData && publicData.announce;
-  const status = (a && a.active)
-    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Attivo: ${esc(a.gara||'')}</span>`
+  const activeDesc = (a && a.active && a.items)
+    ? (Array.isArray(a.items)?a.items:Object.values(a.items)).map(it=>{
+        const ws=(Array.isArray(it.winners)?it.winners:Object.values(it.winners||{})).map(w=>w.nome).join(' e ');
+        return (it.tipo==='drappo'?'🛡️ ':'🏆 ')+ws;
+      }).join(' · ')
+    : null;
+  const status = activeDesc
+    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Attivo: ${esc(activeDesc)}</span>`
     : `<span class="pill" style="border-color:var(--border);color:var(--text-dim)">⚪ Nessun annuncio</span>`;
-  const opts = state.gare.map(g=>{
-    const w = state.contrade.filter(c=>g.pos[c.id]===1).map(c=>c.nome);
-    const label = `${g.sport}${g.categoria?(' · '+g.categoria):''}`;
-    return `<option value="${g.id}">${esc(label)}${w.length?(' — 1º: '+esc(w.join(', '))):' — (nessun 1º)'}</option>`;
-  }).join('');
+  const disp = state.gare.filter(disputata).length;
+  const lead = t => classifica(t).filter(e=>e.rank===1).map(e=>e.c.nome).join(' e ');
   return `<div class="card">
     <div class="sectionTitle"><h2>📣 Annuncio vincitore (pubblico)</h2> ${status}</div>
-    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli 🎉) per il vincitore della gara scelta — chi è in <b>1ª posizione</b>. Resta visibile finché non lo rimuovi o lo sostituisci con un altro.</p>
+    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli 🎉) per il vincitore del <b>Palio</b> e/o del <b>Drappo</b> — chi è 1º in classifica in questo momento. Resta visibile finché non lo rimuovi o lo sostituisci.</p>
     <div class="row" style="margin-top:10px">
-      <select class="tipo" data-action="ann-gara" style="min-width:250px; max-width:100%">${opts}</select>
+      <select class="tipo" data-action="ann-tipo" style="min-width:250px; max-width:100%">
+        <option value="palio">🏆 Vincitore del Palio${disp?(' — '+esc(lead('palio'))):''}</option>
+        <option value="drappo">🛡️ Vincitore del Drappo${disp?(' — '+esc(lead('drappo'))):''}</option>
+        <option value="entrambi">🏆+🛡️ Entrambi (Palio e Drappo)</option>
+      </select>
       <button class="btn gold" data-action="ann-publish">📣 Annuncia al pubblico</button>
       <button class="btn" data-action="ann-clear">🙈 Rimuovi annuncio</button>
     </div>
@@ -1422,15 +1439,15 @@ document.addEventListener('click', e=>{
       if(confirm('Nascondere le classifiche al pubblico?\n\nTornerà a vedere il messaggio di attesa.')) publishHide();
       break;
     case 'ann-publish': {
-      const sel = document.querySelector('select[data-action="ann-gara"]');
-      const g = sel ? findGara(sel.value) : null;
-      if(!g) break;
-      const ws = state.contrade.filter(c=>g.pos[c.id]===1).map(c=>({nome:c.nome, c1:c.c1, c2:c.c2}));
-      if(!ws.length){ alert('Per questa gara non è stata inserita nessuna 1ª posizione.'); break; }
-      const label = `${g.sport}${g.categoria?(' · '+g.categoria):''}`;
-      if(confirm(`Annunciare al pubblico la vittoria di ${ws.map(w=>w.nome).join(' e ')} in "${label}"?\n\nApparirà un banner di festeggiamento sulla home del sito.`)){
+      const sel = document.querySelector('select[data-action="ann-tipo"]');
+      const choice = sel ? sel.value : 'palio';
+      if(!state.gare.some(disputata)){ alert('Nessuna gara disputata: non c\'è ancora un vincitore da annunciare.'); break; }
+      const mk = t => ({ tipo:t, winners: classifica(t).filter(e=>e.rank===1).map(e=>({nome:e.c.nome, c1:e.c.c1, c2:e.c.c2})) });
+      const items = choice==='entrambi' ? [mk('palio'), mk('drappo')] : [mk(choice)];
+      const desc = items.map(it=>(it.tipo==='drappo'?'Drappo: ':'Palio: ')+it.winners.map(w=>w.nome).join(' e ')).join(' · ');
+      if(confirm(`Annunciare al pubblico — ${desc}?\n\nApparirà un banner di festeggiamento sulla home del sito.`)){
         db.ref(CLOUD_PATH+'/public/announce').set({
-          active:true, gara:label, winners:ws, at:firebase.database.ServerValue.TIMESTAMP
+          active:true, items, at:firebase.database.ServerValue.TIMESTAMP
         }).catch(e=>console.warn('ann err', e));
       }
       break; }
