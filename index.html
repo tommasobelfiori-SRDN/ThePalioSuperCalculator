@@ -99,6 +99,18 @@
   }
   .btn-satispay:hover{background:#e03e36; transform:translateY(-1px)}
   .don-close{position:absolute; top:12px; right:12px}
+  /* ---------- popup competizioni vinte ---------- */
+  .nome.clickable{cursor:pointer}
+  .nome.clickable:hover{text-decoration:underline}
+  .cwin-hint{font-size:.66rem; color:var(--text-dim); border:1px solid var(--border); border-radius:20px; padding:1px 7px; vertical-align:middle; white-space:nowrap; font-weight:600}
+  #cwin{position:fixed; inset:0; z-index:120; background:rgba(7,9,13,.86); backdrop-filter:blur(4px); display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:7vh 16px}
+  #cwin.on{display:flex}
+  .cwin-box{background:var(--bg-2); border:1px solid var(--accent); border-radius:16px; max-width:440px; width:100%; padding:22px; position:relative; box-shadow:0 12px 50px rgba(0,0,0,.6)}
+  .cwin-box h2{text-align:center; margin:2px 0 4px; font-size:1.5rem; font-family:Georgia,serif}
+  .cwin-list{list-style:none; padding:0; margin:12px 0 0; display:flex; flex-direction:column; gap:6px}
+  .cwin-list li{background:var(--bg-3); border:1px solid var(--border); border-left:4px solid var(--cc,var(--accent)); border-radius:9px; padding:9px 12px; font-size:.9rem}
+  .cwin-list li .cwc{font-size:.75rem; color:var(--text-dim)}
+  .cwin-close{position:absolute; top:12px; right:12px}
   @media (max-width:720px){
     header{padding:10px 12px}
     header h1{font-size:1.45rem; letter-spacing:2px}
@@ -337,6 +349,14 @@
   <div id="presBody"></div>
 </div>
 
+<!-- popup competizioni vinte da una contrada -->
+<div id="cwin">
+  <div class="cwin-box">
+    <button class="btn cwin-close" data-action="cwin-close">✕</button>
+    <div id="cwinBody"></div>
+  </div>
+</div>
+
 <!-- finestra donazioni -->
 <div id="donate">
   <div class="don-box">
@@ -420,7 +440,7 @@ const ALBO = [
   {anno:'2023', cap:{lago:'Daniela Dafano',    giardini:'Francesca Cirone',    andromeda:'Chiara Cappelleri',   bosco:'Valentina Daietti',  sagittario:'Vittoria Cojazzi'},  palio:'giardini', drappo:'andromeda'},
   {anno:'2024', cap:{lago:'Matteo Masserani',  giardini:'Michele Moroni',      andromeda:'Laura May',           bosco:'Riccardo Gigliotti', sagittario:'Vittoria Cojazzi'},  palio:'lago',     drappo:'sagittario'},
   {anno:'2025', cap:{lago:'Matteo Masserani',  giardini:'Clara Agrillo',       andromeda:'Chiara Martinazzoli', bosco:'Riccardo Gigliotti', sagittario:'Martina Novini'},    palio:'giardini', drappo:'sagittario'},
-  {anno:'2026', cap:{lago:'Matteo Masserani',  giardini:'Marzia Rossi',        andromeda:'Pietro Distefano',    bosco:'Roberto Paradiso',   sagittario:'Martina Novini'},    palio:null,       drappo:null},
+  {anno:'2026', cap:{lago:'Matteo Masserani',  giardini:'Marzia Rossi',        andromeda:'Pietro Distefano',    bosco:'Roberto Paradiso',   sagittario:'Martina Novini'},    palio:'giardini', drappo:'sagittario'},
 ];
 
 const STATE_VERSION = 1;
@@ -799,6 +819,22 @@ function openDonate(){
   document.getElementById('donate').classList.add('on');
 }
 function closeDonate(){ document.getElementById('donate').classList.remove('on'); }
+
+// popup: competizioni vinte da una contrada (1ª posizione)
+function openCwin(cid){
+  const c = state.contrade.find(x=>x.id===cid);
+  if(!c) return;
+  const won = state.gare.filter(g=>g.pos[cid]===1);
+  const list = won.length
+    ? `<ul class="cwin-list">${won.map(g=>`<li style="--cc:${c.chart}">${esc(g.sport)}${g.categoria?` <span class="cwc">· ${esc(g.categoria)}</span>`:''}</li>`).join('')}</ul>`
+    : `<p class="muted" style="text-align:center; margin-top:14px">Nessuna competizione vinta${state.gare.some(disputata)?'':' (gare non ancora disputate)'}.</p>`;
+  document.getElementById('cwinBody').innerHTML = `
+    <h2 style="color:${c.chart}">${esc(c.nome)}</h2>
+    <p class="muted" style="text-align:center; margin:0">🏆 Competizioni vinte: <b style="color:var(--accent)">${won.length}</b></p>
+    ${list}`;
+  document.getElementById('cwin').classList.add('on');
+}
+function closeCwin(){ document.getElementById('cwin').classList.remove('on'); }
 function copyText(txt){
   if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt);
   return new Promise((res,rej)=>{
@@ -823,20 +859,20 @@ function confettiHTML(colors, n){
   }
   return s;
 }
+const ANN_TYPES = [['palio','🏆','Vincitore del Palio'],['drappo','🛡️','Vincitore del Drappo']];
+const annWinners = it => it ? (Array.isArray(it.winners) ? it.winners : Object.values(it.winners||{})) : [];
 function announceBanner(){
   const a = publicData && publicData.announce;
-  if(!(a && a.active && a.items)) return '';
-  const items = Array.isArray(a.items) ? a.items : Object.values(a.items);
-  if(!items.length) return '';
-  const allWinners = it => Array.isArray(it.winners) ? it.winners : Object.values(it.winners||{});
-  const colors = [...new Set(items.flatMap(it=>allWinners(it).flatMap(w=>[w.c1,w.c2])).concat(['#d4af37','#ffffff']))];
-  const blocks = items.map(it=>{
-    const ws = allWinners(it);
-    if(!ws.length) return '';
+  if(!a) return '';
+  const present = ANN_TYPES.filter(([t])=> a[t] && annWinners(a[t]).length);
+  if(!present.length) return '';
+  const colors = [...new Set(present.flatMap(([t])=>annWinners(a[t]).flatMap(w=>[w.c1,w.c2])).concat(['#d4af37','#ffffff']))];
+  let latestAt = 0;
+  const blocks = present.map(([t,icon,tit])=>{
+    const ws = annWinners(a[t]);
+    if(a[t].at>latestAt) latestAt = a[t].at;
     const names = ws.map(w=>`<span style="background:linear-gradient(90deg,${w.c1},${w.c2});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(w.nome)}</span>`);
     const verb = ws.length>1 ? 'Vincono' : 'Vince';
-    const icon = it.tipo==='drappo' ? '🛡️' : '🏆';
-    const tit  = it.tipo==='drappo' ? 'Vincitore del Drappo' : 'Vincitore del Palio';
     return `<div class="a-block">
       <div class="a-k">${icon} ${tit} ${icon}</div>
       <div class="a-win">${verb} ${names.join(' e ')}!</div>
@@ -844,26 +880,22 @@ function announceBanner(){
   }).join('');
   return `<div class="announce">${confettiHTML(colors)}
     ${blocks}
-    ${a.at?`<div class="a-sub">${fmtTime(a.at)}</div>`:''}
+    ${latestAt?`<div class="a-sub">${fmtTime(latestAt)}</div>`:''}
   </div>`;
 }
 function buildAnnCard(){
   if(!cloudOn) return '';
   const a = publicData && publicData.announce;
-  const activeDesc = (a && a.active && a.items)
-    ? (Array.isArray(a.items)?a.items:Object.values(a.items)).map(it=>{
-        const ws=(Array.isArray(it.winners)?it.winners:Object.values(it.winners||{})).map(w=>w.nome).join(' e ');
-        return (it.tipo==='drappo'?'🛡️ ':'🏆 ')+ws;
-      }).join(' · ')
-    : null;
-  const status = activeDesc
-    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Attivo: ${esc(activeDesc)}</span>`
+  const parts = ANN_TYPES.filter(([t])=> a && a[t] && annWinners(a[t]).length)
+    .map(([t,icon])=> icon+' '+annWinners(a[t]).map(w=>w.nome).join(' e '));
+  const status = parts.length
+    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Attivo: ${esc(parts.join(' · '))}</span>`
     : `<span class="pill" style="border-color:var(--border);color:var(--text-dim)">⚪ Nessun annuncio</span>`;
   const disp = state.gare.filter(disputata).length;
   const lead = t => classifica(t).filter(e=>e.rank===1).map(e=>e.c.nome).join(' e ');
   return `<div class="card">
     <div class="sectionTitle"><h2>📣 Annuncio vincitore (pubblico)</h2> ${status}</div>
-    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli 🎉) per il vincitore del <b>Palio</b> e/o del <b>Drappo</b> — chi è 1º in classifica in questo momento. Resta visibile finché non lo rimuovi o lo sostituisci.</p>
+    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli 🎉) per il vincitore del <b>Palio</b> e/o del <b>Drappo</b> — chi è 1º in classifica. I due annunci sono <b>indipendenti</b>: puoi pubblicarli insieme o separatamente, restano entrambi finché non li rimuovi.</p>
     <div class="row" style="margin-top:10px">
       <select class="tipo" data-action="ann-tipo" style="min-width:250px; max-width:100%">
         <option value="palio">🏆 Vincitore del Palio${disp?(' — '+esc(lead('palio'))):''}</option>
@@ -871,7 +903,7 @@ function buildAnnCard(){
         <option value="entrambi">🏆+🛡️ Entrambi (Palio e Drappo)</option>
       </select>
       <button class="btn gold" data-action="ann-publish">📣 Annuncia al pubblico</button>
-      <button class="btn" data-action="ann-clear">🙈 Rimuovi annuncio</button>
+      <button class="btn" data-action="ann-clear">🙈 Rimuovi (la scelta sopra)</button>
     </div>
   </div>`;
 }
@@ -1073,9 +1105,10 @@ function viewClassifica(tipo){
     const cls = e.rank===1?'p1':e.rank===2?'p2':e.rank===3?'p3':'';
     const val = isDr ? fmtD(e.val) : fmtP(e.val);
     const sub = isDr ? `coeff. ${fmtCoeff(e.c.coeff)}` : '';
+    const wc = state.gare.filter(g=>g.pos[e.c.id]===1).length;
     return `<div class="srow ${cls}" style="--cc:${e.c.chart}">
       <div class="rank">${e.rank}<span class="medal">${medal(e.rank)}</span></div>
-      <div><div class="nome" style="color:${e.c.chart}">${esc(e.c.nome)}</div>
+      <div><div class="nome clickable" data-action="cwin" data-cid="${e.c.id}" style="color:${e.c.chart}">${esc(e.c.nome)} <span class="cwin-hint">🏆 ${wc}</span></div>
         ${sub?`<div class="sub">${sub}</div>`:''}
         <div class="bar" style="width:${Math.max(4,e.val/max*100)}%;background:linear-gradient(90deg,${e.c.c1},${e.c.c2})"></div></div>
       <div class="tot">${val}</div>
@@ -1084,7 +1117,7 @@ function viewClassifica(tipo){
   return `<div class="card">
     <div class="sectionTitle"><h2>${isDr?'Classifica Drappo':'Classifica Palio'}</h2></div>
     <div class="standings">${rows}</div>
-    <p class="hint">Ordinamento per punti decrescenti. A parità di punti le contrade condividono la posizione (es. 1-2-2-4); l'ordine alfabetico è solo indicativo.
+    <p class="hint">Tocca il nome di una contrada per vedere le <b>competizioni vinte</b>. Ordinamento per punti decrescenti; a parità di punti le contrade condividono la posizione (es. 1-2-2-4).
       ${isDr?'Drappo = punti Palio × coefficiente della contrada.':''}</p>
   </div>`;
 }
@@ -1418,6 +1451,8 @@ document.addEventListener('click', e=>{
     case 'present-mode': presentMode = t.dataset.mode; renderPresent(); break;
     case 'donate-open': openDonate(); break;
     case 'donate-close': closeDonate(); break;
+    case 'cwin': openCwin(t.dataset.cid); break;
+    case 'cwin-close': closeCwin(); break;
     case 'copy-iban':
       copyText(DON_IBAN).then(()=>{
         t.textContent='✓ IBAN copiato!';
@@ -1442,20 +1477,29 @@ document.addEventListener('click', e=>{
       const sel = document.querySelector('select[data-action="ann-tipo"]');
       const choice = sel ? sel.value : 'palio';
       if(!state.gare.some(disputata)){ alert('Nessuna gara disputata: non c\'è ancora un vincitore da annunciare.'); break; }
-      const mk = t => ({ tipo:t, winners: classifica(t).filter(e=>e.rank===1).map(e=>({nome:e.c.nome, c1:e.c.c1, c2:e.c.c2})) });
-      const items = choice==='entrambi' ? [mk('palio'), mk('drappo')] : [mk(choice)];
-      const desc = items.map(it=>(it.tipo==='drappo'?'Drappo: ':'Palio: ')+it.winners.map(w=>w.nome).join(' e ')).join(' · ');
-      if(confirm(`Annunciare al pubblico — ${desc}?\n\nApparirà un banner di festeggiamento sulla home del sito.`)){
-        db.ref(CLOUD_PATH+'/public/announce').set({
-          active:true, items, at:firebase.database.ServerValue.TIMESTAMP
-        }).catch(e=>console.warn('ann err', e));
+      const types = choice==='entrambi' ? ['palio','drappo'] : [choice];
+      const updates = { active:null, items:null };          // ripulisce eventuale formato vecchio
+      const desc = [];
+      types.forEach(t=>{
+        const winners = classifica(t).filter(e=>e.rank===1).map(e=>({nome:e.c.nome, c1:e.c.c1, c2:e.c.c2}));
+        updates[t] = { winners, at:firebase.database.ServerValue.TIMESTAMP };
+        desc.push((t==='drappo'?'Drappo: ':'Palio: ')+winners.map(w=>w.nome).join(' e '));
+      });
+      if(confirm(`Annunciare al pubblico — ${desc.join(' · ')}?\n\nApparirà un banner di festeggiamento sulla home del sito.`)){
+        db.ref(CLOUD_PATH+'/public/announce').update(updates).catch(e=>console.warn('ann err', e));
       }
       break; }
-    case 'ann-clear':
-      if(confirm('Rimuovere l\'annuncio del vincitore dal sito pubblico?')){
-        db.ref(CLOUD_PATH+'/public/announce').update({active:false}).catch(e=>console.warn('ann clear err', e));
+    case 'ann-clear': {
+      const sel = document.querySelector('select[data-action="ann-tipo"]');
+      const choice = sel ? sel.value : 'palio';
+      const types = choice==='entrambi' ? ['palio','drappo'] : [choice];
+      const lab = types.map(t=>t==='drappo'?'Drappo':'Palio').join(' e ');
+      if(confirm(`Rimuovere l'annuncio (${lab}) dal sito pubblico?`)){
+        const updates = {active:null, items:null};
+        types.forEach(t=> updates[t]=null);
+        db.ref(CLOUD_PATH+'/public/announce').update(updates).catch(e=>console.warn('ann clear err', e));
       }
-      break;
+      break; }
     case 'demo-fill': {
       const pin = prompt('MODALITÀ DEMO — riempie TUTTE le gare con punteggi casuali (sovrascrive i risultati attuali).\n\nInserisci il PIN per continuare:');
       if(pin==null) break;
@@ -1538,12 +1582,11 @@ document.getElementById('importFile').addEventListener('change', function(){
 
 // scorciatoie presentazione
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){ closePresent(); closeDonate(); }
+  if(e.key==='Escape'){ closePresent(); closeDonate(); closeCwin(); }
 });
-// click sullo sfondo scuro chiude la finestra donazioni
-document.getElementById('donate').addEventListener('click', function(e){
-  if(e.target===this) closeDonate();
-});
+// click sullo sfondo scuro chiude le finestre
+document.getElementById('donate').addEventListener('click', function(e){ if(e.target===this) closeDonate(); });
+document.getElementById('cwin').addEventListener('click', function(e){ if(e.target===this) closeCwin(); });
 
 // ri-render al passaggio mobile<->desktop (la vista Gare cambia layout)
 let _wasMobile = isMobile(), _resizeT = null;
