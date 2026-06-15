@@ -62,6 +62,9 @@
     display:inline-block; margin-top:10px; background:#1a1205; color:var(--accent-2);
     padding:7px 16px; border-radius:20px; font-size:.85rem; font-weight:700; letter-spacing:.3px;
   }
+  .support-banner.compact{padding:12px 18px; font-size:.9rem; line-height:1.4; margin:18px 0 0}
+  .support-banner.compact .sb-cta{margin:0 0 0 8px; padding:5px 13px; font-size:.82rem; white-space:nowrap}
+  @media (max-width:560px){ .support-banner.compact .sb-cta{display:block; margin:8px auto 0; width:max-content} }
   /* ---------- annuncio vincitore (banner celebrativo) ---------- */
   .announce{
     position:relative; overflow:hidden; text-align:center;
@@ -779,7 +782,8 @@ function renderViewer(){
   nav.style.display='';
   nav.innerHTML = items.map(v=>
     `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`).join('');
-  if(current==='albo'){ app.innerHTML = viewAlbo(); return; }
+  const sb = supportBannerCompact();
+  if(current==='albo'){ app.innerHTML = viewAlbo() + sb; return; }
   const ann = announceBanner();
   if(!revealed){
     app.innerHTML = ann + viewWait(publicData && publicData.message);
@@ -790,10 +794,13 @@ function renderViewer(){
   if(snap) state = snap;
   const lab = publicData.label && publicData.label.trim() ? publicData.label : 'Classifica ufficiale';
   const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b></div>`;
-  if(current==='palio')       app.innerHTML = ann+banner+viewClassifica('palio');
-  else if(current==='drappo') app.innerHTML = ann+banner+viewClassifica('drappo');
-  else if(current==='grafici')app.innerHTML = ann+banner+viewGrafici();
+  if(current==='palio')       app.innerHTML = ann+banner+viewClassifica('palio')+sb;
+  else if(current==='drappo') app.innerHTML = ann+banner+viewClassifica('drappo')+sb;
+  else if(current==='grafici')app.innerHTML = ann+banner+viewGrafici()+sb;
   if(current==='grafici') drawCharts();
+}
+function supportBannerCompact(){
+  return `<div class="support-banner compact" data-action="donate-open" title="Scopri come donare">🤝 <b>Sostieni il Palio</b> · ogni contributo aiuta a coprire le spese <span class="sb-cta">💛 Dona</span></div>`;
 }
 function viewLoading(){
   return `<div class="card" style="text-align:center; padding:70px 22px">
