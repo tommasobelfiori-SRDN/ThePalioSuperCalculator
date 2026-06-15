@@ -789,8 +789,7 @@ function renderViewer(){
   const snap = migrate(normalizeState(JSON.parse(JSON.stringify(publicData.snapshot||{}))));
   if(snap) state = snap;
   const lab = publicData.label && publicData.label.trim() ? publicData.label : 'Classifica ufficiale';
-  const at = publicData.at ? (' · aggiornata al '+fmtTime(publicData.at)) : '';
-  const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b>${at}</div>`;
+  const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b></div>`;
   if(current==='palio')       app.innerHTML = ann+banner+viewClassifica('palio');
   else if(current==='drappo') app.innerHTML = ann+banner+viewClassifica('drappo');
   else if(current==='grafici')app.innerHTML = ann+banner+viewGrafici();
