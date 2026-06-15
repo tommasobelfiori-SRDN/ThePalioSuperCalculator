@@ -882,10 +882,8 @@ function announceBanner(){
   const present = ANN_TYPES.filter(([t])=> a[t] && annWinners(a[t]).length);
   if(!present.length) return '';
   const colors = [...new Set(present.flatMap(([t])=>annWinners(a[t]).flatMap(w=>[w.c1,w.c2])).concat(['#d4af37','#ffffff']))];
-  let latestAt = 0;
   const blocks = present.map(([t,icon,tit])=>{
     const ws = annWinners(a[t]);
-    if(a[t].at>latestAt) latestAt = a[t].at;
     const names = ws.map(w=>`<span style="background:linear-gradient(90deg,${w.c1},${w.c2});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(w.nome)}</span>`);
     const verb = ws.length>1 ? 'Vincono' : 'Vince';
     return `<div class="a-block">
@@ -895,7 +893,6 @@ function announceBanner(){
   }).join('');
   return `<div class="announce">${confettiHTML(colors)}
     ${blocks}
-    ${latestAt?`<div class="a-sub">${fmtTime(latestAt)}</div>`:''}
   </div>`;
 }
 function buildAnnCard(){
@@ -1132,8 +1129,6 @@ function viewClassifica(tipo){
   return `<div class="card">
     <div class="sectionTitle"><h2>${isDr?'Classifica Drappo':'Classifica Palio'}</h2></div>
     <div class="standings">${rows}</div>
-    <p class="hint">Tocca il nome di una contrada per vedere le <b>competizioni vinte</b>. Ordinamento per punti decrescenti; a parità di punti le contrade condividono la posizione (es. 1-2-2-4).
-      ${isDr?'Drappo = punti Palio × coefficiente della contrada.':''}</p>
   </div>`;
 }
 
