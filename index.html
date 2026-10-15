@@ -2,335 +2,663 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#04060b">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Classifica Palio e Drappo del Palio Malaspina 2026.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2304060b'/%3E%3Cg stroke-width='7' stroke-linecap='round' fill='none'%3E%3Cpath d='M11 50 20 14' stroke='%2322c55e'/%3E%3Cpath d='M20 50 29 14' stroke='%2338bdf8'/%3E%3Cpath d='M29 50 38 14' stroke='%23cbd5e1'/%3E%3Cpath d='M38 50 47 14' stroke='%23f97316'/%3E%3Cpath d='M47 50 56 14' stroke='%233a5fe0'/%3E%3C/g%3E%3C/svg%3E">
 <title>Palio 2026 – Calcolo Punteggio</title>
 <style>
+  /* =====================================================================
+     PALIO 2026 — grafica "broadcast sportivo"
+     Fondo notte, numeri giganti, colori pieni delle contrade, linee oblique
+     (come le cinque aste del logo Gruppo Palio). Oro = Palio, argento = Drappo.
+     ===================================================================== */
   :root{
-    --bg-1:#0d1117; --bg-2:#161b22; --bg-3:#1f2630; --bg-4:#2a3240;
-    --border:#30363d; --text:#e6edf3; --text-dim:#8b949e;
-    --accent:#d4af37; --accent-2:#f2c94c; --success:#2ea043; --danger:#da3633; --warn:#d29922;
+    color-scheme:dark;
+    --ink-0:#04060b; --ink-1:#080c14; --ink-2:#0e1420; --ink-3:#151d2d; --ink-4:#1e283b;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+    --text:#f4f7fc; --text-2:#b3bdd0; --text-3:#7c8aa3;
+    --gold:#ffc72c; --gold-2:#ffe08a; --silver:#d9e0ec; --silver-2:#8f9bb0; --bronze:#e0924f;
+    --live:#2be28b; --warn:#ffb020; --danger:#ff4d57;
+    --display:"Avenir Next Condensed","Barlow Condensed","Bahnschrift SemiBold Condensed","Roboto Condensed",sans-serif-condensed,"Arial Narrow","Helvetica Neue",Arial,sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    /* nomi storici, rimandati ai nuovi */
+    --bg-1:var(--ink-1); --bg-2:var(--ink-2); --bg-3:var(--ink-3); --bg-4:var(--ink-4);
+    --border:var(--line-2); --text-dim:var(--text-2); --accent:var(--gold); --accent-2:var(--gold-2); --success:var(--live);
     /* colori ufficiali contrade (riusati dalla companion app) */
     --andromeda:#9ca3af; --bosco:#f97316; --giardini:#16a34a; --lago:#1e40af; --sagittario:#ec4899;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
+  html{background:var(--ink-0); -webkit-text-size-adjust:100%}
   body{
-    background:radial-gradient(1200px 600px at 50% -10%, #18202c 0%, var(--bg-1) 60%);
-    color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh; -webkit-font-smoothing:antialiased;
+    margin:0; position:relative; min-height:100vh; overflow-x:hidden;
+    background:transparent; color:var(--text); font-family:var(--body); line-height:1.45;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
-  h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif}
-  a{color:var(--accent)}
-  /* ---------- header ---------- */
-  header{
-    padding:18px 20px 14px; text-align:center; position:relative;
-    border-bottom:2px solid var(--accent); background:linear-gradient(180deg,#10161f,#0d1117);
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 88% -8%, rgba(255,199,44,.11), transparent 60%),
+      radial-gradient(800px 620px at -8% 22%, rgba(56,189,248,.075), transparent 60%),
+      repeating-linear-gradient(115deg, rgba(255,255,255,.016) 0 2px, transparent 2px 22px),
+      linear-gradient(180deg, var(--ink-1), var(--ink-0));
   }
-  header h1{
-    margin:0; font-size:1.7rem; letter-spacing:3px;
-    background:linear-gradient(180deg,var(--accent-2),var(--accent)); -webkit-background-clip:text;
-    background-clip:text; -webkit-text-fill-color:transparent;
+  h1,h2,h3,p{margin:0}
+  a{color:var(--gold)}
+  ::selection{background:var(--gold); color:#000}
+  *{scrollbar-width:thin; scrollbar-color:#2a3550 transparent}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+  button{font-family:inherit}
+  .ic{width:1.2em; height:1.2em; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+  .muted{color:var(--text-2)}
+  .skip{position:absolute; left:-9999px; top:8px; z-index:300; background:var(--gold); color:#000; padding:8px 14px; font-weight:700}
+  .skip:focus{left:8px}
+
+  /* ---------- barra in alto ---------- */
+  #top{position:sticky; top:0; z-index:50}
+  #top::before{
+    content:""; position:absolute; inset:0; z-index:-1;
+    background:linear-gradient(180deg, rgba(4,6,11,.94), rgba(4,6,11,.84));
+    -webkit-backdrop-filter:blur(14px) saturate(1.3); backdrop-filter:blur(14px) saturate(1.3);
   }
-  header p{margin:4px 0 0; color:var(--text-dim); letter-spacing:4px; font-size:.72rem; text-transform:uppercase}
-  #saveBadge{
-    position:absolute; right:16px; top:16px; font-size:.72rem; padding:4px 10px; border-radius:20px;
-    border:1px solid var(--border); color:var(--text-dim); background:var(--bg-2); transition:.3s;
+  .top-in{
+    max-width:1280px; margin:0 auto; padding:10px max(22px,env(safe-area-inset-right)) 10px max(22px,env(safe-area-inset-left));
+    display:grid; align-items:center; gap:22px;
+    grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"brand nav bar";
   }
-  #saveBadge.ok{color:var(--success); border-color:var(--success)}
-  #saveBadge.warn{color:var(--warn); border-color:var(--warn)}
-  #topbar{position:absolute; left:14px; top:14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-  .cbadge{font-size:.72rem; padding:4px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-dim); background:var(--bg-2)}
-  .cbadge.live{color:var(--success); border-color:var(--success)}
-  .cbadge.off{color:var(--warn); border-color:var(--warn)}
-  .cbadge.btnlike{cursor:pointer; font-weight:600}
-  .cbadge.btnlike:hover{border-color:var(--accent); color:var(--text)}
-  .cbadge.btnlike.admin{color:#1a1205; background:linear-gradient(180deg,var(--accent-2),var(--accent)); border-color:var(--accent)}
-  select:disabled, input:disabled{opacity:.5; cursor:not-allowed}
-  .viewer-note{background:rgba(46,160,67,.10); border:1px solid var(--success); color:#9ae6b4; padding:9px 13px; border-radius:10px; margin-bottom:14px; font-size:.85rem}
-  .loader-ring{width:46px; height:46px; margin:0 auto; border-radius:50%; border:4px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .support-banner{
-    background:linear-gradient(135deg,#f2c94c,#d4af37); color:#1a1205;
-    border-radius:14px; padding:18px 22px; text-align:center; margin-bottom:18px;
-    font-size:1.05rem; line-height:1.55; font-weight:600;
-    box-shadow:0 4px 18px rgba(212,175,55,.28);
-    cursor:pointer; transition:transform .15s, box-shadow .15s;
+  .brand{grid-area:brand; display:flex; align-items:center; gap:13px; min-width:0}
+  .stripes{display:inline-flex; gap:3px; height:30px; align-items:stretch; transform:skewX(-20deg); flex:none}
+  .stripes i{width:6px; border-radius:1.5px}
+  .stripes i:nth-child(1){background:#22c55e} .stripes i:nth-child(2){background:#38bdf8}
+  .stripes i:nth-child(3){background:#cbd5e1} .stripes i:nth-child(4){background:#f97316}
+  .stripes i:nth-child(5){background:#3a5fe0}
+  .brand-t{display:flex; align-items:baseline; gap:8px; font-family:var(--display); text-transform:uppercase; line-height:1}
+  .brand-t b{font-size:2rem; font-weight:800; font-style:italic; letter-spacing:.02em}
+  .brand-t em{font-size:2rem; font-weight:800; font-style:italic; color:var(--gold)}
+  .brand-s{font:700 .62rem/1.2 var(--display); letter-spacing:.22em; text-transform:uppercase; color:var(--text-3); padding-left:13px; border-left:1px solid var(--line-2)}
+  .top-rule{height:3px; background:linear-gradient(90deg,#22c55e 0 20%,#38bdf8 20% 40%,#cbd5e1 40% 60%,#f97316 60% 80%,#3a5fe0 80%)}
+  #topbar{grid-area:bar; display:flex; gap:8px; align-items:center; justify-content:flex-end}
+  #saveBadge{font:600 .72rem var(--body); color:var(--text-3); transition:color .3s}
+  #saveBadge.ok{color:var(--live)}
+  #saveBadge.warn{color:var(--warn)}
+  .cbadge{
+    display:inline-flex; align-items:center; gap:7px; padding:7px 11px; border-radius:3px;
+    font:800 .74rem/1 var(--display); letter-spacing:.15em; text-transform:uppercase; white-space:nowrap;
+    border:1px solid var(--line-2); color:var(--text-2); background:rgba(255,255,255,.04);
   }
-  .support-banner:hover{transform:translateY(-2px); box-shadow:0 8px 26px rgba(212,175,55,.45)}
-  .support-banner b{font-family:Georgia,serif; font-size:1.1em}
-  .support-banner .sb-cta{
-    display:inline-block; margin-top:10px; background:#1a1205; color:var(--accent-2);
-    padding:7px 16px; border-radius:20px; font-size:.85rem; font-weight:700; letter-spacing:.3px;
+  .cbadge::before{content:""; width:7px; height:7px; border-radius:50%; background:currentColor}
+  .cbadge.live{color:var(--live); border-color:rgba(43,226,139,.45); background:rgba(43,226,139,.08)}
+  .cbadge.live::before{animation:pulse 1.8s infinite}
+  .cbadge.off{color:var(--warn); border-color:rgba(255,176,32,.5); background:rgba(255,176,32,.08)}
+  .cbadge.btnlike{cursor:pointer; font-family:var(--display)}
+  .cbadge.btnlike::before{display:none}
+  .cbadge.btnlike .ic{width:14px; height:14px}
+  .cbadge.btnlike:hover{border-color:var(--gold); color:var(--text)}
+  .cbadge.btnlike.admin{background:linear-gradient(180deg,#ffd75e,#f5b400); color:#1a1300; border-color:#ffd75e}
+
+  /* ---------- schede di navigazione ---------- */
+  #nav{grid-area:nav; display:flex; gap:4px; justify-content:center; min-width:0; padding:3px 6px; overflow-x:auto; scrollbar-width:none}
+  #nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none; -webkit-appearance:none; border:0; margin:0; padding:0 4px; background:transparent; color:var(--text-2); cursor:pointer; transform:skewX(-14deg); border-radius:3px; transition:background .15s,color .15s}
+  .tab-in{display:flex; align-items:center; gap:8px; padding:10px 16px; transform:skewX(14deg); white-space:nowrap; font:800 .95rem/1 var(--display); letter-spacing:.1em; text-transform:uppercase}
+  .tab:hover{background:rgba(255,255,255,.07); color:var(--text)}
+  .tab.on{background:linear-gradient(180deg,#ffd75e,#f5b400); color:#1a1300; box-shadow:0 8px 22px -10px rgba(255,199,44,.85)}
+  .tab.on[data-view="drappo"]{background:linear-gradient(180deg,#f1f4fa,#bcc7d8); box-shadow:0 8px 22px -10px rgba(217,224,236,.7)}
+  .tab .ns{display:none}
+  /* con molte schede (admin) o poco spazio: la barra va su una seconda riga */
+  #top.many .top-in{grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"brand bar" "nav nav"; gap:2px 16px}
+  #top.many #nav{justify-content:flex-start; padding-bottom:8px}
+  @media (max-width:979px){
+    .top-in{grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"brand bar" "nav nav"; gap:2px 16px}
+    #nav{justify-content:flex-start; padding-bottom:8px}
   }
-  .support-banner.compact{padding:12px 18px; font-size:.9rem; line-height:1.4; margin:18px 0 0}
-  .support-banner.compact .sb-cta{margin:0 0 0 8px; padding:5px 13px; font-size:.82rem; white-space:nowrap}
-  @media (max-width:560px){ .support-banner.compact .sb-cta{display:block; margin:8px auto 0; width:max-content} }
-  /* ---------- annuncio vincitore (banner celebrativo) ---------- */
-  .announce{
-    position:relative; overflow:hidden; text-align:center;
-    border:2px solid var(--accent); border-radius:16px; padding:26px 18px 20px; margin-bottom:18px;
-    background:radial-gradient(620px 220px at 50% -40%, rgba(212,175,55,.22), transparent 60%), var(--bg-2);
-    box-shadow:0 6px 26px rgba(212,175,55,.18);
+
+  /* ---------- contenuto ---------- */
+  main{max-width:1200px; margin:0 auto; padding:26px max(22px,env(safe-area-inset-right)) 70px max(22px,env(safe-area-inset-left))}
+  .vhead{display:flex; align-items:flex-end; justify-content:space-between; gap:16px 24px; flex-wrap:wrap; margin:4px 0 20px}
+  .eyebrow{display:flex; align-items:center; gap:9px; margin-bottom:9px; font:800 .76rem/1 var(--display); letter-spacing:.3em; text-transform:uppercase; color:var(--text-3)}
+  .dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--live); animation:pulse 1.8s infinite}
+  .vtitle{font:italic 800 clamp(2.4rem,6.6vw,4.4rem)/.9 var(--display); text-transform:uppercase; letter-spacing:-.005em}
+  .vtitle .g{color:var(--gold)}
+  .vtitle .g.s{color:var(--silver)}
+  .vtitle::after{
+    content:""; display:block; width:110px; height:6px; margin-top:14px; transform:skewX(-30deg); transform-origin:left;
+    background:linear-gradient(90deg,var(--gold) 0 56%,transparent 56% 64%,rgba(255,199,44,.55) 64% 80%,transparent 80% 88%,rgba(255,199,44,.25) 88%);
   }
-  .announce .a-k{font-size:.78rem; letter-spacing:3px; color:var(--accent); text-transform:uppercase; font-weight:700}
-  .announce .a-gara{font-family:Georgia,serif; font-size:clamp(1rem,2.6vw,1.3rem); color:var(--text); margin:8px 0 2px}
-  .announce .a-win{font-family:Georgia,serif; font-weight:800; font-size:clamp(1.7rem,6vw,2.7rem); margin:4px 0 6px; line-height:1.15}
-  .announce .a-sub{color:var(--text-dim); font-size:.78rem}
-  .announce .a-block + .a-block{margin-top:16px; padding-top:16px; border-top:1px solid rgba(212,175,55,.35)}
-  .confetti{position:absolute; top:-20px; width:8px; height:14px; border-radius:2px; opacity:.9; pointer-events:none; animation:confFall linear infinite}
-  @keyframes confFall{
-    0%{transform:translateY(-20px) rotate(0deg)}
-    100%{transform:translateY(380px) rotate(560deg)}
+  .vtitle:has(.g.s)::after{background:linear-gradient(90deg,var(--silver) 0 56%,transparent 56% 64%,rgba(217,224,236,.55) 64% 80%,transparent 80% 88%,rgba(217,224,236,.25) 88%)}
+  .hint{font-size:.8rem; line-height:1.55; color:var(--text-3); margin:12px 0 0}
+  .hint.pad{padding:0 20px 18px}
+  .hint b{color:var(--text-2)}
+
+  /* selettore a due posizioni */
+  .seg{display:inline-flex; gap:3px; padding:3px; border:1px solid var(--line-2); border-radius:4px; background:rgba(255,255,255,.04)}
+  .seg-b{appearance:none; -webkit-appearance:none; border:0; background:transparent; color:var(--text-2); cursor:pointer; display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:2px; font:800 .92rem/1 var(--display); letter-spacing:.12em; text-transform:uppercase}
+  .seg-b:hover{color:var(--text)}
+  .seg-b.on{background:linear-gradient(180deg,#ffd75e,#f5b400); color:#1a1300}
+  .seg-b.on[data-view="drappo"], .seg-b.on[data-mode="drappo"]{background:linear-gradient(180deg,#f1f4fa,#bcc7d8)}
+
+  /* avanzamento: una tacca per gara */
+  .prog{display:flex; align-items:center; gap:14px 18px; flex-wrap:wrap; margin:0 0 18px}
+  .prog-l{display:flex; align-items:baseline; gap:6px; white-space:nowrap; font:700 .78rem var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--text-2)}
+  .prog-l b{font:italic 800 1.7rem/1 var(--display); letter-spacing:0; color:var(--text)}
+  .ticks{display:flex; gap:2px; flex:1 1 220px; min-width:160px; height:10px}
+  .ticks i{flex:1; background:rgba(255,255,255,.1); transform:skewX(-24deg); border-radius:1px}
+  .ticks i.on{background:linear-gradient(180deg,var(--gold-2),var(--gold))}
+
+  /* ---------- in testa (striscia a colori pieni) ---------- */
+  .hero{
+    position:relative; isolation:isolate; display:flex; align-items:flex-end; justify-content:space-between; gap:24px;
+    padding:30px 38px 32px; margin-bottom:16px; overflow:hidden;
+    background:linear-gradient(100deg,var(--hg)); color:var(--hink,#fff);
+    clip-path:polygon(0 0,100% 0,100% calc(100% - 26px),calc(100% - 26px) 100%,0 100%);
+    animation:rise .5s cubic-bezier(.2,.8,.2,1) both;
   }
-  /* ---------- finestra donazioni ---------- */
-  #donate{
-    position:fixed; inset:0; z-index:120; background:rgba(7,9,13,.86);
-    backdrop-filter:blur(4px); display:none; align-items:flex-start; justify-content:center;
-    overflow:auto; padding:5vh 16px;
+  .hero::before{
+    content:""; position:absolute; inset:0; z-index:-1;
+    background:
+      linear-gradient(115deg,transparent 0 56%,rgba(255,255,255,.15) 56% 63%,transparent 63% 67%,rgba(255,255,255,.1) 67% 71%,transparent 71%),
+      linear-gradient(180deg,transparent 45%,rgba(0,0,0,.22));
   }
-  #donate.on{display:flex}
-  .don-box{background:var(--bg-2); border:1px solid var(--accent); border-radius:16px; max-width:760px; width:100%; padding:22px; position:relative; box-shadow:0 12px 50px rgba(0,0,0,.6)}
-  .don-box h2{color:var(--accent); margin:2px 0 6px; text-align:center; font-size:1.4rem}
-  .don-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-top:16px}
-  .don-card{background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:16px}
-  .don-card h3{margin:0 0 10px; color:var(--accent-2); font-size:1.05rem}
-  .iban{font-family:ui-monospace,Menlo,Consolas,monospace; background:var(--bg-1); border:1px dashed var(--accent); padding:10px; border-radius:8px; font-size:.9rem; letter-spacing:.5px; word-break:break-all; text-align:center; margin:10px 0}
-  .don-row{font-size:.87rem; margin:7px 0; color:var(--text); line-height:1.5}
-  .don-row b{color:var(--accent-2)}
-  .btn-satispay{
-    display:block; text-align:center; background:#f94c43; color:#fff; font-weight:800;
-    border-radius:10px; padding:13px 12px; text-decoration:none; font-size:1.02rem; margin-top:12px;
-    box-shadow:0 3px 12px rgba(249,76,67,.35); transition:.15s;
+  .hero-in{min-width:0}
+  .hero-k{margin-bottom:16px}
+  .tag{
+    display:inline-flex; align-items:center; gap:8px; padding:7px 14px 7px 11px; transform:skewX(-14deg);
+    background:var(--hink,#fff); color:var(--hrev,#0a0e17);
+    font:800 .78rem/1 var(--display); letter-spacing:.22em; text-transform:uppercase;
   }
-  .btn-satispay:hover{background:#e03e36; transform:translateY(-1px)}
-  .don-close{position:absolute; top:12px; right:12px}
-  /* ---------- popup competizioni vinte ---------- */
-  .nome.clickable{cursor:pointer}
-  .nome.clickable:hover{text-decoration:underline}
-  .cwin-hint{font-size:.66rem; color:var(--text-dim); border:1px solid var(--border); border-radius:20px; padding:1px 7px; vertical-align:middle; white-space:nowrap; font-weight:600}
-  #cwin{position:fixed; inset:0; z-index:120; background:rgba(7,9,13,.86); backdrop-filter:blur(4px); display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:7vh 16px}
-  #cwin.on{display:flex}
-  .cwin-box{background:var(--bg-2); border:1px solid var(--accent); border-radius:16px; max-width:440px; width:100%; padding:22px; position:relative; box-shadow:0 12px 50px rgba(0,0,0,.6)}
-  .cwin-box h2{text-align:center; margin:2px 0 4px; font-size:1.5rem; font-family:Georgia,serif}
-  .cwin-list{list-style:none; padding:0; margin:12px 0 0; display:flex; flex-direction:column; gap:6px}
-  .cwin-list li{background:var(--bg-3); border:1px solid var(--border); border-left:4px solid var(--cc,var(--accent)); border-radius:9px; padding:9px 12px; font-size:.9rem}
-  .cwin-list li .cwc{font-size:.75rem; color:var(--text-dim)}
-  .cwin-close{position:absolute; top:12px; right:12px}
-  @media (max-width:720px){
-    header{padding:10px 12px}
-    header h1{font-size:1.45rem; letter-spacing:2px}
-    header p{font-size:.62rem; letter-spacing:2px; margin-top:2px}
-    #topbar{position:static; justify-content:center; margin-top:0; margin-bottom:6px}
-    #saveBadge{position:static; display:inline-block; margin-top:6px}
-    main{padding:14px 12px 50px}
-  }
-  /* ---------- nav ---------- */
-  nav{
-    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:12px;
-    position:sticky; top:0; z-index:30; background:rgba(13,17,23,.92); backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--border);
-  }
-  nav button{
-    background:var(--bg-2); color:var(--text-dim); border:1px solid var(--border);
-    padding:9px 16px; border-radius:10px; cursor:pointer; font-size:.85rem; font-weight:600;
-    letter-spacing:.5px; transition:.15s;
-  }
-  nav button:hover{color:var(--text); border-color:var(--accent)}
-  nav button.active{
-    color:#1a1205; background:linear-gradient(180deg,var(--accent-2),var(--accent));
-    border-color:var(--accent); box-shadow:0 0 12px rgba(212,175,55,.35);
-  }
-  main{max-width:1180px; margin:0 auto; padding:18px 16px 60px}
-  /* ---------- footer Gruppo Palio ---------- */
-  footer#siteFooter{display:flex; justify-content:center; padding:26px 16px 38px; border-top:1px solid var(--border)}
-  footer#siteFooter svg{width:250px; max-width:64vw; height:auto}
-  /* ---------- generici ---------- */
-  .card{background:var(--bg-2); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:18px}
-  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-  .btn{
-    background:var(--bg-3); color:var(--text); border:1px solid var(--border); padding:9px 14px;
-    border-radius:10px; cursor:pointer; font-size:.85rem; font-weight:600;
-  }
-  .btn:hover{border-color:var(--accent)}
-  .btn.gold{background:linear-gradient(180deg,var(--accent-2),var(--accent)); color:#1a1205; border-color:var(--accent)}
-  .btn.danger{background:var(--danger); color:#fff; border-color:var(--danger)}
-  .btn.sm{padding:5px 9px; font-size:.78rem; border-radius:8px}
-  .muted{color:var(--text-dim)}
-  .pill{display:inline-block; padding:2px 9px; border-radius:20px; font-size:.7rem; font-weight:700; border:1px solid var(--border)}
-  .sectionTitle{display:flex; align-items:center; gap:10px; margin:0 0 14px}
-  .sectionTitle h2{margin:0; font-size:1.25rem; color:var(--accent)}
-  .hint{font-size:.78rem; color:var(--text-dim); margin:8px 0 0; line-height:1.5}
-  .banner{
-    background:rgba(210,153,34,.12); border:1px solid var(--warn); color:#f0d68a;
-    padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:.85rem;
-    display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
-  }
-  /* ---------- matrice gare ---------- */
-  .matrix-wrap{overflow:auto; border:1px solid var(--border); border-radius:12px}
-  table.matrix{border-collapse:separate; border-spacing:0; width:100%; font-size:.85rem; min-width:760px}
-  table.matrix th, table.matrix td{padding:8px 9px; border-bottom:1px solid var(--border); text-align:center}
-  table.matrix thead th{
-    position:sticky; top:0; z-index:5; background:var(--bg-3); color:var(--text);
-    font-size:.78rem; letter-spacing:.5px; border-bottom:2px solid var(--accent);
-  }
-  table.matrix thead th .coeff{display:block; font-size:.66rem; color:var(--text-dim); font-weight:400}
-  table.matrix thead th .cname{display:block; font-weight:600}
-  table.matrix thead th .cbar{display:block; height:3px; width:72%; margin:4px auto 3px; border-radius:3px}
-  table.matrix .colNum{width:34px; color:var(--text-dim)}
-  table.matrix .colGara{text-align:left; min-width:190px}
-  table.matrix td.colNum, table.matrix td.colGara, table.matrix th.colNum, table.matrix th.colGara{
-    position:sticky; left:0; background:var(--bg-2); z-index:4;
-  }
-  table.matrix th.colGara{z-index:6}
-  table.matrix td.colNum{left:0; z-index:4}
-  table.matrix td.colGara{left:34px; z-index:4; border-right:1px solid var(--border)}
-  table.matrix th.colGara{left:34px}
-  table.matrix tbody tr:hover td{background:var(--bg-3)}
-  table.matrix tbody tr.nondisp td{opacity:.62}
-  table.matrix tr.grouprow td.grouphdr{
-    position:sticky; left:0; z-index:3; text-align:left;
-    font-family:Georgia,serif; font-weight:700; font-size:.98rem; letter-spacing:.6px;
-    color:var(--accent); background:#1c232e;
-    border-top:1px solid var(--border); border-bottom:1px solid var(--accent);
-    box-shadow:inset 4px 0 0 var(--accent); padding:9px 14px 8px;
-  }
-  table.matrix tr.grouprow:hover td{background:#1c232e}
-  .gara-name{font-weight:700}
-  .gara-cat{font-size:.74rem; color:var(--text-dim)}
-  select.cell, select.tipo{
-    background:var(--bg-1); color:var(--text); border:1px solid var(--border);
-    border-radius:8px; padding:5px 6px; font-size:.85rem; cursor:pointer; min-width:52px; text-align:center;
-  }
-  select.cell:focus, select.tipo:focus{outline:1px solid var(--accent); border-color:var(--accent)}
-  select.cell.set{border-color:var(--accent)}
-  td.cell.dup{outline:2px dashed var(--warn); outline-offset:-2px}
-  .cellpts{display:block; font-size:.68rem; color:var(--accent); margin-top:3px; min-height:.9em}
-  .tipo-badge{font-size:.66rem}
-  tfoot td{background:var(--bg-3); font-weight:700; border-top:2px solid var(--accent)}
-  tfoot .tp{color:var(--accent)} tfoot .td{color:var(--text-dim); font-weight:600; font-size:.74rem; display:block}
-  /* ---------- classifiche ---------- */
-  .standings{display:flex; flex-direction:column; gap:10px}
+  .hero-name{font:italic 800 clamp(2.8rem,9.4vw,6.6rem)/.88 var(--display); text-transform:uppercase; letter-spacing:-.01em; overflow-wrap:anywhere}
+  .hero-name.multi{font-size:clamp(2rem,6.2vw,4.5rem)}
+  .hero-name .amp{opacity:.6; margin:0 .25em; font-weight:600}
+  .hero-meta{margin-top:16px; font-weight:600; font-size:1rem; opacity:.92}
+  .hero-meta b{font-weight:800}
+  .hero-score{text-align:right; flex:none; color:var(--hink2,var(--hink,#fff))}
+  .hero-score b{display:block; font:italic 800 clamp(3.4rem,11vw,8.2rem)/.8 var(--display); font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+  .hero-score span{display:block; margin-top:12px; font:800 .8rem var(--display); letter-spacing:.26em; text-transform:uppercase; opacity:.85}
+  .hero.tie{color:#fff}
+  .hero.tie::after{content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(4,6,11,.66),rgba(4,6,11,.42))}
+  .hero.idle{background:linear-gradient(100deg,#1b2437,#0e1420); color:var(--text)}
+  .hero.idle .hero-name{font-size:clamp(2rem,5vw,3.6rem)}
+
+  /* ---------- classifica ---------- */
+  .standings{display:flex; flex-direction:column; gap:8px}
   .srow{
-    display:grid; grid-template-columns:46px 1fr auto; align-items:center; gap:14px;
-    background:var(--bg-3); border:1px solid var(--border); border-left:5px solid var(--cc,var(--border));
-    border-radius:12px; padding:12px 16px;
+    position:relative; display:grid; grid-template-columns:80px minmax(0,1fr) auto; align-items:center; gap:0 22px;
+    min-height:90px; padding:14px 26px 14px 0; border-radius:4px; overflow:hidden;
+    background:linear-gradient(90deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 72%);
   }
-  .srow .rank{font-size:1.5rem; font-weight:800; color:var(--accent); text-align:center}
-  .srow.p1{background:linear-gradient(90deg,rgba(255,215,0,.12),var(--bg-3)); border-left-color:#ffd700}
-  .srow.p2{border-left-color:#c0c0c0}
-  .srow.p3{border-left-color:#cd7f32}
-  .srow .nome{font-weight:700; font-size:1.05rem; font-family:Georgia,serif}
-  .srow .sub{font-size:.72rem; color:var(--text-dim)}
-  .srow .bar{height:7px; border-radius:6px; margin-top:6px; background:var(--cc,var(--accent)); opacity:.85}
-  .srow .tot{font-size:1.45rem; font-weight:800; color:var(--accent); white-space:nowrap}
-  .srow .medal{font-size:1.2rem}
+  .srow::before{content:""; position:absolute; left:0; top:0; bottom:0; width:9px; background:linear-gradient(180deg,var(--c1),var(--c2))}
+  .rk{padding-left:9px; text-align:center; font:italic 800 2.8rem/1 var(--display); font-variant-numeric:tabular-nums}
+  .info{min-width:0}
+  .nome{
+    appearance:none; -webkit-appearance:none; background:none; border:0; padding:0; margin:0; cursor:pointer; color:var(--text); text-align:left;
+    display:inline-flex; align-items:center; gap:12px; flex-wrap:wrap;
+    font:italic 800 clamp(1.5rem,3.6vw,2.3rem)/1 var(--display); text-transform:uppercase; letter-spacing:.01em;
+  }
+  .nome:hover{color:var(--cc,var(--gold))}
+  .cwin-hint{display:inline-flex; align-items:center; gap:5px; padding:4px 7px; border-radius:3px; font:800 .78rem/1 var(--display); font-style:normal; letter-spacing:.06em; color:var(--text-2); border:1px solid var(--line-2); text-transform:none; white-space:nowrap}
+  .cwin-hint .ic{width:14px; height:14px; color:var(--gold)}
+  .meter{height:7px; margin-top:11px; background:rgba(255,255,255,.09); transform:skewX(-24deg); overflow:hidden; border-radius:1px}
+  .meter i{display:block; height:100%; background:linear-gradient(90deg,var(--c1),var(--c2)); transform-origin:left; animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+  .srow .sub{margin-top:7px; font:700 .72rem var(--body); letter-spacing:.08em; text-transform:uppercase; color:var(--text-3)}
+  .sc{text-align:right}
+  .tot{display:block; font:italic 800 clamp(2.3rem,5.2vw,3.4rem)/.9 var(--display); font-variant-numeric:tabular-nums}
+  .gap{display:block; margin-top:7px; font:800 .72rem/1 var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--text-3)}
+  .srow.p1{background:linear-gradient(90deg,rgba(255,199,44,.26),rgba(255,199,44,.06) 66%); box-shadow:inset 0 0 0 1px rgba(255,199,44,.5)}
+  .srow.p1 .rk,.srow.p1 .tot{color:var(--gold)}
+  .srow.p1 .gap{color:var(--gold-2)}
+  .srow.p2 .rk{color:var(--silver)}
+  .srow.p3 .rk{color:var(--bronze)}
+
+  /* ---------- schede, titoli di sezione, etichette ---------- */
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02)); border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:18px}
+  .card.flush{padding:0; overflow:hidden}
+  .sectionTitle{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 16px}
+  .sectionTitle h2{position:relative; padding-left:15px; font:italic 800 1.5rem/1 var(--display); text-transform:uppercase; letter-spacing:.02em}
+  .sectionTitle h2::before{content:""; position:absolute; left:0; top:.06em; bottom:.06em; width:5px; background:var(--gold); transform:skewX(-14deg)}
+  .st-ic{display:grid; place-items:center; width:36px; height:36px; border-radius:4px; background:rgba(255,199,44,.14); color:var(--gold); transform:skewX(-10deg)}
+  .st-ic .ic{transform:skewX(10deg); width:20px; height:20px}
+  .st-ic + h2{padding-left:0}
+  .st-ic + h2::before{display:none}
+  .hall-d .st-ic{background:rgba(217,224,236,.14); color:var(--silver)}
+  .pill{display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:3px; font:800 .72rem/1 var(--display); letter-spacing:.14em; text-transform:uppercase; border:1px solid var(--line-2); color:var(--text-2); background:rgba(255,255,255,.04)}
+  .pill .ic{width:13px; height:13px}
+  .pill.ok{color:var(--live); border-color:rgba(43,226,139,.45); background:rgba(43,226,139,.08)}
+  .pill.warn{color:var(--warn); border-color:rgba(255,176,32,.5); background:rgba(255,176,32,.08)}
+  .pill.gold{color:var(--gold); border-color:rgba(255,199,44,.5); background:rgba(255,199,44,.08)}
+  .pill.silver{color:var(--silver); border-color:rgba(217,224,236,.45); background:rgba(217,224,236,.07)}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:18px; margin-bottom:18px}
+  .grid2 > .card{margin-bottom:0}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .banner,.viewer-note{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 16px; margin-bottom:16px;
+    border-radius:4px; border:1px solid rgba(255,176,32,.5); border-left-width:5px; background:rgba(255,176,32,.09); color:#ffd89a; font-size:.88rem;
+  }
+  .banner > span,.viewer-note > span{flex:1 1 220px}
+  .banner .ic{color:var(--warn)}
+  .viewer-note{border-color:rgba(43,226,139,.5); background:rgba(43,226,139,.08); color:#a8f0cd}
+  .viewer-note .ic{color:var(--live)}
+
+  /* ---------- pulsanti e moduli ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 17px; border-radius:4px; cursor:pointer;
+    font:800 .9rem/1 var(--display); letter-spacing:.1em; text-transform:uppercase; text-decoration:none;
+    color:var(--text); background:rgba(255,255,255,.06); border:1px solid var(--line-2); transition:border-color .15s,background .15s,transform .15s;
+  }
+  .btn:hover{border-color:var(--gold); background:rgba(255,199,44,.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn.gold{background:linear-gradient(180deg,#ffd75e,#f5b400); color:#1a1300; border-color:#ffd75e; box-shadow:0 10px 24px -12px rgba(255,199,44,.8)}
+  .btn.gold:hover{background:linear-gradient(180deg,#ffe07d,#ffc01a)}
+  .btn.danger{background:var(--danger); border-color:var(--danger); color:#fff}
+  .btn.danger:hover{background:#ff6a72}
+  .btn.sm{padding:8px 12px; font-size:.78rem}
+  .btn.block{display:flex; width:100%}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
+  input:not([type=color]):not([type=file]), select, textarea{
+    font:inherit; color:var(--text); background:rgba(255,255,255,.05); border:1px solid var(--line-2); border-radius:4px; padding:9px 11px;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--gold); outline-offset:0; border-color:var(--gold)}
+  input:disabled, select:disabled, textarea:disabled{opacity:.5; cursor:not-allowed}
+  select{cursor:pointer}
+  select option{background:#101828; color:var(--text)}
+  .fld{display:block; margin-top:14px}
+  .fld > span{display:block; margin-bottom:6px; font-size:.82rem; color:var(--text-2)}
+  .w-max{width:100%; max-width:580px}
+  select.tipo{padding:7px 8px; font-size:.82rem}
+  select.tipo.wide{min-width:260px; max-width:100%}
+
+  /* ---------- schermata d'attesa ---------- */
+  .wait{
+    position:relative; overflow:hidden; text-align:center; padding:62px 24px 56px; margin-bottom:18px; border-radius:8px; border:1px solid var(--line);
+    background:radial-gradient(560px 260px at 50% 0,rgba(255,199,44,.18),transparent 70%), linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  }
+  .wait::before{content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,255,255,.022) 46px 92px)}
+  .wait > *{position:relative}
+  .wait-art{width:88px; height:88px; margin:0 auto 24px; display:grid; place-items:center; border-radius:50%; color:var(--gold); border:2px solid rgba(255,199,44,.45); box-shadow:0 0 0 8px rgba(255,199,44,.07)}
+  .wait-art .ic{width:40px; height:40px; stroke-width:1.5; animation:flip 4s ease-in-out infinite}
+  .wait .eyebrow{justify-content:center; color:var(--gold)}
+  .wait-msg{max-width:860px; margin:12px auto 16px; font:italic 800 clamp(2rem,5.8vw,3.8rem)/1 var(--display); text-transform:uppercase}
+  .wait-sub{max-width:520px; margin:0 auto; color:var(--text-2)}
+  .loading{text-align:center; padding:96px 20px; color:var(--text-3); font:700 .8rem var(--display); letter-spacing:.24em; text-transform:uppercase}
+  .loader{display:inline-flex; gap:6px; height:52px; align-items:flex-end; transform:skewX(-14deg); margin-bottom:16px}
+  .loader i{width:10px; height:100%; transform-origin:bottom; animation:bars 1.1s ease-in-out infinite}
+  .loader i:nth-child(1){background:#22c55e} .loader i:nth-child(2){background:#38bdf8; animation-delay:.12s}
+  .loader i:nth-child(3){background:#cbd5e1; animation-delay:.24s} .loader i:nth-child(4){background:#f97316; animation-delay:.36s}
+  .loader i:nth-child(5){background:#3a5fe0; animation-delay:.48s}
+
+  /* ---------- invito a donare ---------- */
+  .support-banner{
+    position:relative; overflow:hidden; display:flex; align-items:center; gap:18px; padding:20px 24px; margin-bottom:18px; border-radius:6px; cursor:pointer;
+    background:linear-gradient(100deg,#ffd75e,#f2b200); color:#1a1300; box-shadow:0 18px 40px -20px rgba(255,199,44,.7); transition:transform .15s,box-shadow .15s;
+  }
+  .support-banner:hover{transform:translateY(-2px); box-shadow:0 24px 46px -18px rgba(255,199,44,.85)}
+  .sb-ic{flex:none; display:grid; place-items:center; width:48px; height:48px; border-radius:50%; background:#1a1300; color:var(--gold)}
+  .sb-ic .ic{width:24px; height:24px}
+  .sb-tx{flex:1 1 auto; font-weight:600; font-size:1rem; line-height:1.5}
+  .sb-tx b{font-weight:800}
+  .sb-cta{flex:none; display:inline-flex; align-items:center; gap:9px; padding:11px 16px; border-radius:3px; background:#1a1300; color:var(--gold-2); font:800 .86rem/1 var(--display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap}
+  .support-banner.compact{margin:24px 0 0; padding:12px 16px; gap:14px; color:var(--text); background:linear-gradient(90deg,rgba(255,199,44,.14),rgba(255,199,44,.04)); box-shadow:inset 0 0 0 1px rgba(255,199,44,.35); border-left:5px solid var(--gold)}
+  .support-banner.compact:hover{box-shadow:inset 0 0 0 1px rgba(255,199,44,.7)}
+  .support-banner.compact .sb-ic{width:36px; height:36px; background:rgba(255,199,44,.18)}
+  .support-banner.compact .sb-ic .ic{width:19px; height:19px}
+  .support-banner.compact .sb-tx{font-size:.92rem; font-weight:500}
+  .support-banner.compact .sb-tx b{color:var(--gold-2)}
+  .support-banner.compact .sb-cta{background:var(--gold); color:#1a1300}
+
+  /* ---------- annuncio del vincitore ---------- */
+  .announce{
+    position:relative; overflow:hidden; text-align:center; padding:36px 20px 32px; margin-bottom:28px; border-radius:6px;
+    background:radial-gradient(660px 240px at 50% -30%,rgba(255,199,44,.34),transparent 65%), linear-gradient(180deg,#1b1505,#0c0a02);
+    box-shadow:inset 0 0 0 1px rgba(255,199,44,.45), 0 24px 56px -28px rgba(255,199,44,.6);
+  }
+  .announce::before,.announce::after{content:""; position:absolute; left:0; right:0; height:4px; background:linear-gradient(90deg,#22c55e 0 20%,#38bdf8 20% 40%,#cbd5e1 40% 60%,#f97316 60% 80%,#3a5fe0 80%)}
+  .announce::before{top:0} .announce::after{bottom:0}
+  .a-block{position:relative; z-index:1}
+  .a-block + .a-block{margin-top:28px; padding-top:28px; border-top:1px solid rgba(255,199,44,.3)}
+  .a-k{display:inline-flex; align-items:center; gap:12px; font:800 .9rem/1 var(--display); letter-spacing:.34em; text-transform:uppercase; color:var(--gold)}
+  .a-win{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px 16px; margin-top:16px; font:italic 800 clamp(2rem,7.4vw,4.4rem)/1 var(--display); text-transform:uppercase}
+  .a-name{display:inline-block; padding:.06em .34em .1em; transform:skewX(-10deg); background:linear-gradient(100deg,var(--h1),var(--h2)); color:var(--hink)}
+  .a-name > span{display:inline-block; transform:skewX(10deg)}
+  .a-and{font-size:.5em; opacity:.7}
+  .a-bang{margin-left:-.2em; color:var(--gold)}
+  .confetti{position:absolute; top:-20px; width:8px; height:14px; border-radius:2px; opacity:.9; pointer-events:none; animation:confFall linear infinite}
+
+  /* ---------- finestre (donazioni, gare vinte) ---------- */
+  #donate,#cwin{
+    position:fixed; inset:0; z-index:120; display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:6vh 16px;
+    background:rgba(2,4,8,.82); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  }
+  #donate.on,#cwin.on{display:flex}
+  .don-box,.cwin-box{position:relative; width:100%; background:var(--ink-2); border:1px solid var(--line-2); border-top:4px solid var(--gold); border-radius:8px; box-shadow:0 34px 90px -24px rgba(0,0,0,.9)}
+  .don-box{max-width:800px; padding:28px}
+  .cwin-box{max-width:470px; padding:0 0 20px; overflow:hidden}
+  .don-close,.cwin-close{position:absolute; top:12px; right:12px; z-index:2; width:40px; height:40px; padding:0}
+  .cwin-close{background:rgba(4,6,11,.55); border-color:transparent; color:#fff}
+  .don-top{display:flex; align-items:center; gap:14px; padding-right:44px}
+  .don-ic{display:grid; place-items:center; width:46px; height:46px; border-radius:50%; background:rgba(255,199,44,.16); color:var(--gold)}
+  .don-ic .ic{width:24px; height:24px}
+  .don-box h2{font:italic 800 clamp(1.8rem,5vw,2.4rem)/1 var(--display); text-transform:uppercase}
+  .don-lead{margin-top:10px; color:var(--text-2)}
+  .don-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:14px; margin-top:20px}
+  .don-card{padding:18px; border-radius:6px; background:rgba(255,255,255,.045); border:1px solid var(--line)}
+  .don-card h3{display:flex; align-items:center; gap:10px; margin-bottom:12px; font:italic 800 1.3rem/1 var(--display); text-transform:uppercase; color:var(--gold)}
+  .don-row{margin:10px 0; font-size:.9rem; line-height:1.55}
+  .don-row b{color:var(--gold-2)}
+  .don-note{font-size:.78rem; color:var(--text-3)}
+  .iban{margin:12px 0; padding:12px; border:1px dashed var(--gold); border-radius:4px; background:var(--ink-1); text-align:center; word-break:break-all; font:600 .95rem var(--mono); letter-spacing:.04em}
+  .btn-satispay{display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; padding:14px; border-radius:4px; text-decoration:none; background:#f94c43; color:#fff; font:800 1rem/1 var(--display); letter-spacing:.1em; text-transform:uppercase; box-shadow:0 12px 26px -12px rgba(249,76,67,.8); transition:.15s}
+  .btn-satispay:hover{background:#e03e36; transform:translateY(-1px)}
+  .cw-head{position:relative; padding:28px 26px 22px; background:linear-gradient(100deg,var(--h1),var(--h2)); color:var(--hink)}
+  .cw-k{font:800 .74rem/1 var(--display); letter-spacing:.28em; text-transform:uppercase; opacity:.85}
+  .cw-head h2{margin-top:8px; font:italic 800 clamp(2.4rem,9vw,3.4rem)/.95 var(--display); text-transform:uppercase}
+  .cw-n{position:absolute; right:24px; bottom:12px; font:italic 800 4rem/1 var(--display); color:var(--hink2,var(--hink)); opacity:.92}
+  .cwin-list{list-style:none; padding:0; margin:16px 20px 0; display:flex; flex-direction:column; gap:6px}
+  .cwin-list li{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:3px; background:rgba(255,255,255,.05); border-left:5px solid var(--cc); font-weight:600}
+  .cwin-list li .ic{color:var(--gold)}
+  .cwin-list .cwc{font-weight:500; color:var(--text-2)}
+  .cwin-empty{margin:18px 20px 0; text-align:center; color:var(--text-2)}
+
+  /* ---------- albo d'oro e capitani ---------- */
+  .honor{display:flex; flex-direction:column; gap:8px}
+  .hrow{position:relative; display:flex; align-items:center; gap:14px; padding:12px 16px 12px 0; border-radius:4px; overflow:hidden; background:rgba(255,255,255,.045)}
+  .hrow::before{content:""; position:absolute; left:0; top:0; bottom:0; width:7px; background:linear-gradient(180deg,var(--c1),var(--c2))}
+  .hcount{flex:none; width:66px; padding-left:7px; text-align:center; font:italic 800 2.5rem/1 var(--display); color:var(--gold)}
+  .hall-d .hcount{color:var(--silver)}
+  .hbody{display:flex; flex-direction:column; gap:4px; min-width:0}
+  .hname{font:italic 800 1.4rem/1 var(--display); text-transform:uppercase}
+  .hyears{font-size:.8rem; letter-spacing:.04em; color:var(--text-2)}
+  .albo-wrap{overflow:auto; border:1px solid var(--line); border-radius:6px}
+  table.albo{border-collapse:separate; border-spacing:0; width:100%; min-width:760px; font-size:.88rem}
+  table.albo th, table.albo td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:center}
+  table.albo tbody tr:last-child td{border-bottom:0}
+  table.albo thead th{position:relative; padding:13px 12px 15px; background:var(--ink-3); font:italic 800 1.05rem/1 var(--display); letter-spacing:.06em; text-transform:uppercase}
+  table.albo thead th::after{content:""; position:absolute; left:0; right:0; bottom:0; height:4px; background:linear-gradient(90deg,var(--c1,var(--gold)),var(--c2,var(--gold)))}
+  table.albo td.anno{background:var(--ink-3); color:var(--gold); font:italic 800 1.35rem/1 var(--display)}
+  table.albo td.win-p{background:linear-gradient(180deg,#ffd451,#e6a800); color:#1a1300; font-weight:700}
+  table.albo td.win-d{background:linear-gradient(180deg,#e8edf5,#aab4c6); color:#0e1420; font-weight:700}
+  table.albo td.win-pd{background:linear-gradient(115deg,#ffd451 0%,#e6a800 47%,#e8edf5 53%,#aab4c6 100%); color:#0e1420; font-weight:800}
+  .wi{display:inline-flex; gap:3px; margin-left:6px; vertical-align:-3px}
+  .wi .ic{width:16px; height:16px}
+  .albo-legend{display:flex; gap:10px 22px; flex-wrap:wrap; margin-top:16px; font-size:.8rem; color:var(--text-2)}
+  .albo-legend span{display:inline-flex; align-items:center; gap:8px}
+  .albo-legend .ic{width:16px; height:16px}
+  .sw{display:inline-block; width:16px; height:16px; border-radius:2px; transform:skewX(-14deg)}
+  .sw-p{background:linear-gradient(180deg,#ffd451,#e6a800)}
+  .sw-d{background:linear-gradient(180deg,#e8edf5,#aab4c6)}
+  .sw-pd{background:linear-gradient(115deg,#ffd451 0%,#e6a800 47%,#e8edf5 53%,#aab4c6 100%)}
+  .acard{margin-bottom:12px; padding:12px; border-radius:6px; background:rgba(255,255,255,.04); border:1px solid var(--line)}
+  .acard h3{margin-bottom:10px; font:italic 800 1.6rem/1 var(--display); color:var(--gold)}
+  .arow{position:relative; display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:4px; padding:9px 11px 9px 17px; border-radius:3px; background:rgba(255,255,255,.04); font-size:.88rem; overflow:hidden}
+  .arow::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg,var(--c1),var(--c2))}
+  .arow .an{font:800 .98rem var(--display); letter-spacing:.06em; text-transform:uppercase}
+  .arow .av{text-align:right}
+  .arow.win-p{background:linear-gradient(180deg,#ffd451,#e6a800); color:#1a1300; font-weight:700}
+  .arow.win-d{background:linear-gradient(180deg,#e8edf5,#aab4c6); color:#0e1420; font-weight:700}
+  .arow.win-pd{background:linear-gradient(115deg,#ffd451 0%,#e6a800 47%,#e8edf5 53%,#aab4c6 100%); color:#0e1420; font-weight:800}
+
+  /* ---------- gare e inserimento (admin) ---------- */
+  .matrix-wrap{overflow:auto; max-height:max(340px,calc(100vh - 120px)); -webkit-overflow-scrolling:touch}
+  table.matrix{border-collapse:separate; border-spacing:0; width:100%; min-width:820px; font-size:.88rem}
+  table.matrix th, table.matrix td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:center}
+  table.matrix thead th{position:sticky; top:0; z-index:5; padding:12px 8px 10px; background:#121a29; border-bottom:2px solid var(--gold)}
+  table.matrix th.chead .cname{display:block; font:italic 800 1.1rem/1 var(--display); letter-spacing:.05em; text-transform:uppercase}
+  table.matrix th.chead .cbar{display:block; height:4px; margin:8px auto 7px; width:70%; transform:skewX(-24deg); background:linear-gradient(90deg,var(--c1),var(--c2))}
+  table.matrix th.chead .coeff{display:block; font:700 .66rem var(--body); letter-spacing:.08em; text-transform:uppercase; color:var(--text-3)}
+  table.matrix th.colNum, table.matrix th.colGara{font:800 .72rem var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--text-3)}
+  table.matrix .colNum{width:44px; color:var(--text-3); font-variant-numeric:tabular-nums}
+  table.matrix .colGara{min-width:210px; text-align:left}
+  table.matrix td.colNum, table.matrix td.colGara, table.matrix th.colNum, table.matrix th.colGara{position:sticky; z-index:4; background:#0f1624}
+  table.matrix th.colNum, table.matrix th.colGara{z-index:7; background:#121a29}
+  table.matrix .colNum{left:0}
+  table.matrix .colGara{left:44px; border-right:1px solid var(--line-2)}
+  table.matrix tbody tr:hover td{background:#17223a}
+  table.matrix tbody tr.nondisp td{color:var(--text-2)}
+  table.matrix tr.grouprow td.grouphdr{
+    position:sticky; left:0; z-index:3; padding:10px 16px; text-align:left; background:#1a2338; border-top:1px solid var(--line-2); border-bottom:1px solid var(--gold);
+    font:italic 800 1.15rem/1 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--gold);
+  }
+  table.matrix tr.grouprow td.grouphdr span{position:relative; padding-left:16px}
+  table.matrix tr.grouprow td.grouphdr span::before{content:""; position:absolute; left:0; top:-1px; bottom:-1px; width:5px; background:var(--gold); transform:skewX(-14deg)}
+  table.matrix tr.grouprow:hover td{background:#1a2338}
+  .gara-name{margin-bottom:6px; font-weight:700; font-size:.92rem}
+  td.cell{vertical-align:top}
+  td.cell.dup{outline:2px dashed var(--warn); outline-offset:-3px}
+  select.cell{
+    appearance:none; -webkit-appearance:none; width:66px; padding:8px 4px; border-radius:3px; text-align:center; text-align-last:center;
+    font:800 1.05rem/1 var(--display); letter-spacing:.04em; color:var(--text);
+  }
+  select.cell.pp0{color:var(--text-3)}
+  select.cell.pp1{background:rgba(255,199,44,.2); border-color:var(--gold); color:var(--gold-2)}
+  select.cell.pp2{background:rgba(217,224,236,.16); border-color:var(--silver-2); color:var(--silver)}
+  select.cell.pp3{background:rgba(224,146,79,.18); border-color:var(--bronze); color:#f6bf8e}
+  .cellpts{display:block; min-height:1em; margin-top:5px; font:600 .66rem var(--body); color:var(--text-3); font-variant-numeric:tabular-nums}
+  table.matrix tfoot td{position:sticky; bottom:0; z-index:5; padding:12px 8px; background:#121a29; border-top:2px solid var(--gold); border-bottom:0}
+  table.matrix tfoot td.colNum, table.matrix tfoot td.colGara{z-index:7; background:#121a29; font:800 .8rem var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--text-2)}
+  tfoot .tp{display:block; font:italic 800 1.6rem/1 var(--display); color:var(--gold); font-variant-numeric:tabular-nums}
+  tfoot .td{display:block; margin-top:3px; font:600 .72rem var(--body); color:var(--text-2)}
+  /* mobile: una scheda per gara */
+  .msport{position:relative; margin:24px 0 10px; padding-left:15px; font:italic 800 1.5rem/1 var(--display); letter-spacing:.03em; text-transform:uppercase; color:var(--gold)}
+  .msport::before{content:""; position:absolute; left:0; top:.06em; bottom:.06em; width:5px; background:var(--gold); transform:skewX(-14deg)}
+  .gcard{margin-bottom:12px; padding:12px 14px; border-radius:6px; background:rgba(255,255,255,.045); border:1px solid var(--line)}
+  .gcard.nd{border-style:dashed}
+  .gcard-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:4px; padding-bottom:10px; border-bottom:1px solid var(--line)}
+  .gcard-title{font:italic 800 1.2rem/1.1 var(--display); letter-spacing:.02em; text-transform:uppercase}
+  .gnum{margin-right:8px; font-size:.9rem; color:var(--text-3)}
+  .gcard .tipo{min-width:104px}
+  .mrow{display:grid; grid-template-columns:1fr auto; grid-template-areas:"n s" "p s"; column-gap:12px; row-gap:3px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line)}
+  .mrow:last-child{border-bottom:0; padding-bottom:2px}
+  .mrow.dup{outline:2px dashed var(--warn); outline-offset:2px; border-radius:4px}
+  .mname{grid-area:n; display:flex; align-items:center; gap:11px; font:800 1.08rem/1 var(--display); letter-spacing:.05em; text-transform:uppercase}
+  .mname i{width:7px; height:26px; transform:skewX(-14deg); background:linear-gradient(180deg,var(--c1),var(--c2))}
+  .mrow select.cell{grid-area:s; width:100px; padding:12px 8px; font-size:1.15rem}
+  .mpts{grid-area:p; min-height:.2em; padding-left:18px; font-size:.72rem; color:var(--text-3)}
+  .mpts b{color:var(--text-2)}
+
   /* ---------- grafici ---------- */
-  .chart-card svg{width:100%; height:auto; display:block}
-  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; justify-content:center}
-  .legend span{display:flex; align-items:center; gap:6px; font-size:.8rem; color:var(--text-dim)}
-  .legend i{width:14px; height:4px; border-radius:3px; display:inline-block}
+  .chart{position:relative}
+  .chart svg{display:block; width:100%; height:auto; touch-action:pan-y}
+  .chart .gl{stroke:rgba(255,255,255,.07); stroke-width:1}
+  .chart .ax{fill:var(--text-3); font:600 11px var(--body); font-variant-numeric:tabular-nums}
+  .chart .el{font:800 12px var(--display); letter-spacing:.07em}
+  .chart .el.sm{font-size:10.5px; letter-spacing:.03em}
+  .chart .ev{fill:var(--text-2); font:700 11px var(--body); letter-spacing:0}
+  .chart .cur{opacity:0; transition:opacity .12s}
+  .chart.hv .cur{opacity:1}
+  .chart .xh{stroke:rgba(255,255,255,.4); stroke-width:1; stroke-dasharray:3 3}
+  .tt{position:absolute; top:4px; z-index:3; min-width:200px; max-width:260px; padding:10px 12px; border-radius:4px; pointer-events:none; opacity:0; transition:opacity .12s; background:rgba(8,12,20,.96); border:1px solid var(--line-2); box-shadow:0 18px 40px -14px rgba(0,0,0,.9)}
+  .chart.hv .tt{opacity:1}
+  .tt-h{display:flex; align-items:baseline; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:.78rem; color:var(--text-2)}
+  .tt-h b{font:italic 800 1.4rem/1 var(--display); color:var(--gold)}
+  .tt-r{display:flex; align-items:center; gap:9px; padding:3px 0; font-size:.84rem}
+  .tt-r i{width:9px; height:9px; border-radius:2px; background:var(--cc); transform:skewX(-14deg)}
+  .tt-r span{flex:1; font:800 .9rem var(--display); letter-spacing:.06em; text-transform:uppercase}
+  .tt-r b{font-variant-numeric:tabular-nums; font-weight:700}
+  .legend{display:flex; gap:8px 18px; flex-wrap:wrap; justify-content:center; margin-top:14px}
+  .legend span{display:inline-flex; align-items:center; gap:9px; font:800 .8rem var(--display); letter-spacing:.1em; text-transform:uppercase; color:var(--text-2)}
+  .legend i{width:24px; height:5px; transform:skewX(-24deg); background:linear-gradient(90deg,var(--c1),var(--c2))}
+
   /* ---------- impostazioni ---------- */
-  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px}
-  table.cfg{width:100%; border-collapse:collapse; font-size:.84rem}
-  table.cfg th, table.cfg td{padding:6px 8px; border-bottom:1px solid var(--border); text-align:center}
-  table.cfg th{color:var(--text-dim); font-weight:600}
-  table.cfg input{width:100%; background:var(--bg-1); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:5px 7px; font-size:.84rem}
-  table.cfg input[type=color]{padding:1px; height:30px; cursor:pointer}
-  table.cfg input.num{max-width:90px; text-align:center}
-  .gare-edit .ge-row{display:grid; grid-template-columns:30px 1.4fr 1.1fr 110px auto; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid var(--border)}
-  .gare-edit input, .gare-edit select{background:var(--bg-1); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:6px 8px; font-size:.82rem; width:100%}
-  .gare-edit .ge-num{color:var(--text-dim); text-align:center; font-size:.8rem}
-  .iconbtn{background:none; border:1px solid var(--border); color:var(--text-dim); border-radius:7px; cursor:pointer; padding:4px 8px; font-size:.8rem}
-  .iconbtn:hover{color:var(--text); border-color:var(--accent)}
-  /* ---------- presentazione ---------- */
+  .tbl-scroll{overflow-x:auto}
+  table.cfg{width:100%; border-collapse:collapse; font-size:.86rem}
+  table.cfg th, table.cfg td{padding:7px 8px; border-bottom:1px solid var(--line); text-align:center}
+  table.cfg th{font:800 .72rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--text-3)}
+  table.cfg input:not([type=color]){width:100%}
+  table.cfg input.num{max-width:86px; text-align:center}
+  table.cfg input[type=color]{width:100%; min-width:44px; height:36px; padding:2px; border:1px solid var(--line-2); border-radius:4px; background:transparent; cursor:pointer}
+  table.cfg td.cn{text-align:left; min-width:150px}
+  table.cfg td.cn .flag{display:inline-block; width:6px; height:28px; margin-right:8px; vertical-align:middle; transform:skewX(-14deg); background:linear-gradient(180deg,var(--c1),var(--c2))}
+  table.cfg td.cn input{width:calc(100% - 16px)}
+  .gare-edit .ge-row{display:grid; grid-template-columns:34px 1.4fr 1.1fr 124px auto; gap:8px; align-items:center; padding:7px 0; border-bottom:1px solid var(--line)}
+  .gare-edit .ge-row input, .gare-edit .ge-row select{width:100%}
+  .gare-edit .ge-head{font:800 .72rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--text-3)}
+  .gare-edit .ge-num{text-align:center; font-size:.8rem; color:var(--text-3)}
+  .iconbtn{display:inline-grid; place-items:center; width:34px; height:34px; padding:0; border-radius:4px; cursor:pointer; background:transparent; color:var(--text-2); border:1px solid var(--line-2)}
+  .iconbtn:hover{color:var(--text); border-color:var(--gold)}
+  .iconbtn.del:hover{color:var(--danger); border-color:var(--danger)}
+  .card.demo{border-style:dashed}
+
+  /* ---------- piè di pagina ---------- */
+  #siteFooter{display:flex; flex-direction:column; align-items:center; gap:16px; padding:36px 16px 46px; border-top:1px solid var(--line)}
+  .ft-stripes{display:flex; gap:4px; transform:skewX(-20deg)}
+  .ft-stripes i{width:30px; height:5px}
+  .ft-stripes i:nth-child(1){background:#22c55e} .ft-stripes i:nth-child(2){background:#38bdf8} .ft-stripes i:nth-child(3){background:#cbd5e1}
+  .ft-stripes i:nth-child(4){background:#f97316} .ft-stripes i:nth-child(5){background:#3a5fe0}
+  #siteFooter svg{width:230px; max-width:62vw; height:auto}
+  #siteFooter p{font:700 .72rem var(--display); letter-spacing:.26em; text-transform:uppercase; color:var(--text-3)}
+
+  /* ---------- avviso a comparsa ---------- */
+  #toast{
+    position:fixed; left:50%; bottom:30px; z-index:200; display:flex; align-items:center; gap:11px; max-width:calc(100vw - 32px); padding:13px 18px;
+    border-radius:4px; border:1px solid rgba(43,226,139,.5); border-left:5px solid var(--live); background:#0b1220; color:var(--text); font-weight:600;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.85); transform:translate(-50%,24px); opacity:0; pointer-events:none; transition:opacity .25s,transform .25s;
+  }
+  #toast.on{opacity:1; transform:translate(-50%,0)}
+  #toast .ic{color:var(--live)}
+  #toast.err{border-color:rgba(255,77,87,.5); border-left-color:var(--danger)}
+  #toast.err .ic{color:var(--danger)}
+
+  /* ---------- presentazione a schermo intero ---------- */
   #present{
-    position:fixed; inset:0; z-index:100; background:radial-gradient(1200px 700px at 50% 0%, #18202c, #07090d 70%);
-    display:none; flex-direction:column; padding:3vh 4vw; overflow:auto;
+    position:fixed; inset:0; z-index:100; display:none; flex-direction:column; padding:3.4vh 3.4vw 3vh; overflow:auto;
+    background:radial-gradient(1100px 620px at 82% -12%,rgba(255,199,44,.16),transparent 60%), radial-gradient(900px 620px at 0% 105%,rgba(56,189,248,.11),transparent 60%), var(--ink-0);
   }
   #present.on{display:flex}
-  #present h2{font-size:clamp(1.6rem,4vw,3rem); text-align:center; margin:0 0 1vh;
-    background:linear-gradient(180deg,var(--accent-2),var(--accent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
-  #present .ptoggle{display:flex; gap:10px; justify-content:center; margin-bottom:2vh}
-  #present .pclose{position:absolute; top:18px; right:22px}
-  .podium{display:flex; justify-content:center; align-items:flex-end; gap:2vw; margin:2vh 0 3vh}
-  .podium .pcol{display:flex; flex-direction:column; align-items:center; gap:8px}
-  .podium .block{width:16vw; max-width:200px; border-radius:14px 14px 0 0; display:flex; align-items:flex-end; justify-content:center;
-    color:#0d1117; font-weight:800; font-size:clamp(1.4rem,3vw,2.4rem); padding-bottom:10px; border:1px solid rgba(255,255,255,.15)}
-  .podium .pname{font-family:Georgia,serif; font-size:clamp(1rem,2.2vw,1.6rem); font-weight:700}
-  .podium .pscore{color:var(--accent); font-weight:800; font-size:clamp(1.1rem,2.4vw,1.8rem)}
-  .bigstand{display:flex; flex-direction:column; gap:1.2vh; max-width:900px; margin:0 auto; width:100%}
-  .bigstand .br{display:grid; grid-template-columns:60px 1fr auto; align-items:center; gap:2vw;
-    background:rgba(31,38,48,.7); border:1px solid var(--border); border-left:8px solid var(--cc); border-radius:14px; padding:1.4vh 2vw}
-  .bigstand .br .r{font-size:clamp(1.4rem,3vw,2.2rem); font-weight:800; color:var(--accent); text-align:center}
-  .bigstand .br .n{font-family:Georgia,serif; font-weight:700; font-size:clamp(1.2rem,2.6vw,2rem)}
-  .bigstand .br .t{font-size:clamp(1.3rem,2.8vw,2.1rem); font-weight:800; color:var(--accent)}
-  /* ---------- vista gare su mobile: schede invece della matrice ---------- */
-  .msport{font-family:Georgia,serif; font-weight:700; color:var(--accent); font-size:1.05rem; margin:16px 0 9px; padding:5px 0 5px 11px; border-left:4px solid var(--accent)}
-  .gcard{background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:11px 12px; margin-bottom:12px}
-  .gcard.nd{opacity:.8}
-  .gcard-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; padding-bottom:8px; border-bottom:1px solid var(--border)}
-  .gcard-title{font-weight:700; font-size:1rem}
-  .gcard-title .gnum{color:var(--text-dim); font-size:.82rem; margin-right:5px}
-  .gcard .tipo{min-width:104px}
-  .mrow{display:grid; grid-template-columns:1fr auto; column-gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05)}
-  .mrow:last-child{border-bottom:none}
-  .mrow.dup{outline:2px dashed var(--warn); outline-offset:3px; border-radius:6px}
-  .mname{display:flex; align-items:center; gap:9px; font-weight:600; font-size:.95rem}
-  .mname i{width:14px; height:14px; border-radius:50%; flex:none}
-  .mrow .cell{min-width:94px; font-size:1rem; padding:9px 8px}
-  .mpts{grid-column:1 / -1; font-size:.72rem; color:var(--accent); padding-top:2px; min-height:.3em}
-  @media (max-width:640px){
-    nav button{padding:7px 11px; font-size:.78rem}
-    .srow{grid-template-columns:38px 1fr auto}
-    .gare-edit .ge-row{grid-template-columns:24px 1fr 1fr; }
-    .gare-edit .ge-row .ge-tipo, .gare-edit .ge-row .ge-actions{grid-column:span 3; justify-self:start}
+  .pr-top{display:flex; align-items:flex-end; justify-content:space-between; gap:20px 30px; flex-wrap:wrap; margin-bottom:3vh}
+  .pr-brand{display:flex; align-items:center; gap:12px; margin-bottom:1.4vh; font:italic 800 clamp(1.2rem,2vw,1.9rem)/1 var(--display); text-transform:uppercase; letter-spacing:.03em}
+  .pr-brand em{color:var(--gold)}
+  .pr-brand .stripes{height:26px}
+  #presTitle{font:italic 800 clamp(2.6rem,7vw,6rem)/.88 var(--display); text-transform:uppercase}
+  #presTitle .g{color:var(--gold)}
+  #presTitle .g.s{color:var(--silver)}
+  .pr-ctl{display:flex; align-items:center; gap:12px}
+  .pr-grid{flex:1; display:grid; grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr); gap:3.4vw; align-items:end}
+  .pr-grid.solo{grid-template-columns:minmax(0,1fr); align-items:center; max-width:1200px; width:100%; margin:0 auto}
+  .podium{display:flex; align-items:flex-end; justify-content:center; gap:1.2vw}
+  .pcol{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1vh}
+  .pscore{font:italic 800 clamp(1.7rem,3.4vw,3.2rem)/1 var(--display); color:var(--gold); font-variant-numeric:tabular-nums}
+  .pname{text-align:center; font:italic 800 clamp(1.1rem,2.2vw,2rem)/1 var(--display); text-transform:uppercase}
+  .podium .block{
+    width:100%; min-height:90px; display:flex; align-items:flex-start; justify-content:center; padding-top:1.2vh;
+    background:linear-gradient(180deg,var(--hg)); color:var(--hink); clip-path:polygon(0 14px,100% 0,100% 100%,0 100%);
   }
-  /* ---------- albo d'oro e capitani ---------- */
-  .albo-wrap{overflow:auto; border:1px solid var(--border); border-radius:12px}
-  table.albo{border-collapse:separate; border-spacing:0; width:100%; min-width:680px; font-size:.85rem}
-  table.albo th, table.albo td{padding:9px 10px; border-bottom:1px solid var(--border); text-align:center}
-  table.albo thead th{background:var(--bg-3); border-bottom:2px solid var(--accent); font-size:.78rem; letter-spacing:.5px}
-  table.albo td.anno{font-weight:800; color:var(--accent); background:var(--bg-3)}
-  table.albo td.win-p{background:linear-gradient(180deg,#f2c94c,#cfa52f); color:#1a1205; font-weight:700}
-  table.albo td.win-d{background:linear-gradient(180deg,#dde3e9,#9fa9b3); color:#10151b; font-weight:700}
-  table.albo td.win-pd{background:linear-gradient(135deg,#f2c94c 0%,#d4af37 46%,#dde3e9 54%,#9fa9b3 100%); color:#10151b; font-weight:800}
-  .albo-legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:.78rem; color:var(--text-dim)}
-  .albo-legend i{display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:5px}
-  .honor{display:flex; flex-direction:column; gap:8px}
-  .honor .hrow{display:flex; align-items:center; gap:12px; background:var(--bg-3); border:1px solid var(--border); border-left:5px solid var(--cc); border-radius:10px; padding:9px 12px}
-  .honor .hcount{font-weight:800; color:var(--accent); font-size:1.15rem; min-width:24px; text-align:center}
-  .honor .hname{font-weight:700; font-family:Georgia,serif; min-width:90px}
-  .honor .hyears{font-size:.78rem; color:var(--text-dim)}
-  .acard{background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:10px}
-  .acard h3{margin:0 0 8px; color:var(--accent); font-size:1rem}
-  .acard .arow{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 9px; border-radius:8px; margin-bottom:4px; font-size:.86rem}
-  .acard .arow .an{font-weight:600}
-  .acard .arow.win-p{background:linear-gradient(180deg,#f2c94c,#cfa52f); color:#1a1205; font-weight:700}
-  .acard .arow.win-d{background:linear-gradient(180deg,#dde3e9,#9fa9b3); color:#10151b; font-weight:700}
-  .acard .arow.win-pd{background:linear-gradient(135deg,#f2c94c 0%,#d4af37 46%,#dde3e9 54%,#9fa9b3 100%); color:#10151b; font-weight:800}
-  /* stampa */
+  .podium .block b{font:italic 800 clamp(2.6rem,6vw,5.4rem)/1 var(--display)}
+  .bigstand{display:flex; flex-direction:column; gap:1.3vh; width:100%}
+  .br{position:relative; display:grid; grid-template-columns:clamp(54px,6vw,100px) minmax(0,1fr) auto; align-items:center; gap:1.6vw; padding:1.5vh 2.2vw 1.5vh 0; overflow:hidden; border-radius:4px; background:rgba(255,255,255,.065)}
+  .br::before{content:""; position:absolute; left:0; top:0; bottom:0; width:.7vw; min-width:7px; background:linear-gradient(180deg,var(--c1),var(--c2))}
+  .br .r{padding-left:.7vw; text-align:center; font:italic 800 clamp(1.8rem,3.8vw,3.6rem)/1 var(--display)}
+  .br .n span{font:italic 800 clamp(1.5rem,3.3vw,3.1rem)/1 var(--display); text-transform:uppercase}
+  .br .meter{height:.9vh; min-height:6px}
+  .br .t{font:italic 800 clamp(1.9rem,4.4vw,4.2rem)/1 var(--display); font-variant-numeric:tabular-nums}
+  .br.p1{background:linear-gradient(90deg,rgba(255,199,44,.26),rgba(255,199,44,.06) 66%); box-shadow:inset 0 0 0 1px rgba(255,199,44,.5)}
+  .br.p1 .r,.br.p1 .t{color:var(--gold)}
+  .br.p2 .r{color:var(--silver)}
+  .br.p3 .r{color:var(--bronze)}
+  .pr-foot{margin-top:3vh}
+  .pr-foot .prog{margin:0}
+
+  /* ---------- animazioni ---------- */
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(43,226,139,.65)}70%{box-shadow:0 0 0 9px rgba(43,226,139,0)}100%{box-shadow:0 0 0 0 rgba(43,226,139,0)}}
+  @keyframes grow{from{transform:scaleX(0)}}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)}}
+  @keyframes bars{0%,100%{transform:scaleY(.28)}50%{transform:scaleY(1)}}
+  @keyframes flip{0%,55%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+  @keyframes confFall{0%{transform:translateY(-20px) rotate(0deg)}100%{transform:translateY(380px) rotate(560deg)}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important; transition:none!important}
+  }
+
+  /* ---------- tablet e telefono ---------- */
+  @media (max-width:979px){
+    .pr-grid{grid-template-columns:minmax(0,1fr)}
+    .podium{max-width:640px; margin:0 auto 1vh; width:100%}
+  }
+  @media (max-width:759px){
+    body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+    .top-in{grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"brand bar"; padding:9px max(14px,env(safe-area-inset-right)) 9px max(14px,env(safe-area-inset-left)); gap:10px}
+    #top.many .top-in{grid-template-areas:"brand bar"; gap:10px}
+    .brand{gap:10px}
+    .brand-s,#saveBadge{display:none}
+    .brand-t b,.brand-t em{font-size:1.55rem}
+    .stripes{height:24px}
+    .cbadge{padding:6px 9px; font-size:.68rem}
+    #adminBtn span{display:none}
+    #adminBtn{padding:7px 8px}
+    #adminBtn .ic{width:16px; height:16px}
+    /* schede in basso, come in un'app */
+    #nav{
+      position:fixed; left:0; right:0; bottom:0; z-index:60; justify-content:stretch; gap:0; padding:0 0 env(safe-area-inset-bottom);
+      background:rgba(6,9,15,.95); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border-top:1px solid var(--line-2);
+    }
+    #top.many #nav{padding:0 0 env(safe-area-inset-bottom)}
+    .tab{position:relative; flex:1 0 50px; padding:0; transform:none; border-radius:0; background:transparent!important; box-shadow:none!important}
+    .tab-in{flex-direction:column; justify-content:center; gap:5px; padding:10px 2px 9px; transform:none; font-size:.64rem; letter-spacing:.1em}
+    .tab .ic{width:22px; height:22px}
+    .tab .nl{display:none} .tab .ns{display:inline}
+    .tab.on{color:var(--gold)}
+    .tab.on::before{content:""; position:absolute; top:0; left:22%; right:22%; height:3px; background:var(--gold); transform:skewX(-30deg)}
+    main{padding:18px max(14px,env(safe-area-inset-right)) 26px max(14px,env(safe-area-inset-left))}
+    .eyebrow{letter-spacing:.2em; line-height:1.35}
+    .vtitle{font-size:clamp(2.2rem,12vw,3rem)}
+    .hero{padding:20px 18px 24px; flex-direction:column; align-items:flex-start; gap:12px; clip-path:polygon(0 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%)}
+    .hero-k{margin-bottom:12px}
+    .hero-meta{margin-top:10px}
+    .hero-score{display:flex; align-items:baseline; gap:12px; text-align:left}
+    .hero-score b{font-size:clamp(3.4rem,17vw,4.6rem)}
+    .hero-score span{margin-top:0}
+    .srow{grid-template-columns:54px minmax(0,1fr) auto; gap:0 12px; min-height:80px; padding-right:16px}
+    .rk{font-size:2rem}
+    .card{padding:16px}
+    .card.flush{padding:0}
+    .don-box{padding:22px 18px}
+    .support-banner{flex-wrap:wrap; padding:16px; gap:12px 14px}
+    .sb-tx{flex-basis:calc(100% - 70px); font-size:.92rem}
+    .sb-cta{width:100%; justify-content:center}
+    .support-banner.compact .sb-tx{flex-basis:calc(100% - 56px)}
+    #toast{bottom:calc(86px + env(safe-area-inset-bottom))}
+    #siteFooter{padding-bottom:30px}
+    .gare-edit .ge-row{grid-template-columns:26px 1fr 1fr}
+    .gare-edit .ge-row .ge-tipo, .gare-edit .ge-row .ge-actions{grid-column:1 / -1; justify-self:start}
+    .gare-edit .ge-head{display:none}
+  }
+  @media (max-width:420px){
+    .tot{font-size:2.1rem}
+    .nome{font-size:1.45rem}
+    .cwin-hint{padding:3px 6px}
+  }
+
+  /* ---------- stampa ---------- */
   @media print{
-    nav,#saveBadge,.no-print,#present{display:none!important}
-    body{background:#fff; color:#000}
-    .card{border-color:#999}
+    #top,#toast,.no-print,#present,.support-banner{display:none!important}
+    html,body{background:#fff!important; color:#000}
+    body::before{display:none}
+    .card,.srow{border-color:#999; background:#fff!important; color:#000}
   }
 </style>
 </head>
 <body>
-<header>
-  <div id="topbar">
-    <span id="cloudBadge" class="cbadge">⚪ Locale</span>
-    <button id="adminBtn" class="cbadge btnlike" style="display:none">🔒 Admin</button>
+<a class="skip" href="#app">Vai ai contenuti</a>
+<header id="top">
+  <div class="top-in">
+    <div class="brand">
+      <span class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <div class="brand-t"><b>Palio</b><em>2026</em></div>
+      <span class="brand-s">Calcolo<br>punteggio</span>
+    </div>
+    <nav id="nav" aria-label="Sezioni"></nav>
+    <div id="topbar">
+      <span id="saveBadge">—</span>
+      <span id="cloudBadge" class="cbadge">Locale</span>
+      <button id="adminBtn" class="cbadge btnlike" type="button" style="display:none">Admin</button>
+    </div>
   </div>
-  <h1>PALIO 2026</h1>
-  <p>Calcolo Punteggio · Classifica Palio &amp; Drappo</p>
-  <span id="saveBadge">—</span>
+  <div class="top-rule" aria-hidden="true"></div>
 </header>
 
-<nav id="nav"></nav>
 <main id="app"></main>
 
 <footer id="siteFooter">
+  <div class="ft-stripes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
   <svg viewBox="0 0 408 100" role="img" aria-label="Gruppo Palio" xmlns="http://www.w3.org/2000/svg">
     <text x="2" y="62" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="36" fill="#ffffff">Gruppo Palio</text>
     <g stroke-linecap="round" fill="none" transform="translate(46,0)">
@@ -341,36 +669,49 @@
       <line x1="309" y1="91" x2="343" y2="28" stroke="#1e3a8a" stroke-width="13"/>
     </g>
   </svg>
+  <p>Palio Malaspina · Calcolo punteggio</p>
 </footer>
 
 <!-- overlay presentazione -->
-<div id="present">
-  <button class="btn pclose no-print" data-action="present-close">✕ Chiudi</button>
-  <h2 id="presTitle">Classifica Palio</h2>
-  <div class="ptoggle">
-    <button class="btn gold" data-action="present-mode" data-mode="palio" id="pmPalio">PALIO</button>
-    <button class="btn" data-action="present-mode" data-mode="drappo" id="pmDrappo">DRAPPO</button>
+<div id="present" role="dialog" aria-label="Presentazione della classifica">
+  <div class="pr-top">
+    <div>
+      <div class="pr-brand"><span class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><b>Palio</b><em>2026</em></div>
+      <h2 id="presTitle">Classifica Palio</h2>
+    </div>
+    <div class="pr-ctl">
+      <div class="seg" role="group" aria-label="Classifica">
+        <button type="button" class="seg-b on" data-action="present-mode" data-mode="palio" id="pmPalio">Palio</button>
+        <button type="button" class="seg-b" data-action="present-mode" data-mode="drappo" id="pmDrappo">Drappo</button>
+      </div>
+      <button type="button" class="btn pclose no-print" data-action="present-close"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg> Chiudi</button>
+    </div>
   </div>
   <div id="presBody"></div>
 </div>
 
 <!-- popup competizioni vinte da una contrada -->
-<div id="cwin">
+<div id="cwin" role="dialog" aria-modal="true" aria-label="Competizioni vinte">
   <div class="cwin-box">
-    <button class="btn cwin-close" data-action="cwin-close">✕</button>
+    <button type="button" class="btn cwin-close" data-action="cwin-close" aria-label="Chiudi"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div id="cwinBody"></div>
   </div>
 </div>
 
 <!-- finestra donazioni -->
-<div id="donate">
+<div id="donate" role="dialog" aria-modal="true" aria-label="Sostieni il Palio">
   <div class="don-box">
-    <button class="btn don-close" data-action="donate-close">✕</button>
-    <h2>🤝 Sostieni il Palio</h2>
-    <p class="muted" style="text-align:center; margin:0; font-size:.9rem">Ogni contributo, piccolo o grande, aiuta a coprire le spese del Palio. Grazie!</p>
+    <button type="button" class="btn don-close" data-action="donate-close" aria-label="Chiudi"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="don-top">
+      <span class="don-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg></span>
+      <h2>Sostieni il Palio</h2>
+    </div>
+    <p class="don-lead">Ogni contributo, piccolo o grande, aiuta a coprire le spese del Palio. Grazie!</p>
     <div class="don-grid" id="donGrid"></div>
   </div>
 </div>
+
+<div id="toast" role="status" aria-live="polite"></div>
 
 <input type="file" id="importFile" accept="application/json,.json" style="display:none">
 
@@ -660,13 +1001,17 @@ async function promptAdmin(){
 function updateTopbar(){
   const cb=document.getElementById('cloudBadge'), ab=document.getElementById('adminBtn');
   if(cb){
-    if(!cloudOn){ cb.textContent='⚪ Locale'; cb.className='cbadge'; cb.title='Database condiviso non disponibile: i dati restano su questo dispositivo.'; }
-    else if(cloudConnected){ cb.textContent='🟢 Live'; cb.className='cbadge live'; cb.title='Connesso: classifica condivisa in tempo reale.'; }
-    else { cb.textContent='🟡 Riconnessione…'; cb.className='cbadge off'; cb.title='Connessione al database in corso…'; }
+    if(!cloudOn){ cb.textContent='Locale'; cb.className='cbadge'; cb.title='Database condiviso non disponibile: i dati restano su questo dispositivo.'; }
+    else if(cloudConnected){ cb.textContent='Live'; cb.className='cbadge live'; cb.title='Connesso: classifica condivisa in tempo reale.'; }
+    else { cb.textContent='Riconnessione…'; cb.className='cbadge off'; cb.title='Connessione al database in corso…'; }
   }
   if(ab){
     if(!cloudOn){ ab.style.display='none'; }
-    else { ab.style.display=''; ab.textContent = isAdmin?'✏️ Admin':'🔒 Solo visione'; ab.className='cbadge btnlike'+(isAdmin?' admin':''); }
+    else {
+      ab.style.display=''; ab.innerHTML = ic(isAdmin?'pencil':'lock')+'<span>Admin</span>';
+      ab.className='cbadge btnlike'+(isAdmin?' admin':'');
+      ab.title = isAdmin ? 'Modalità admin attiva: tocca per uscire' : 'Area riservata agli organizzatori';
+    }
   }
 }
 
@@ -718,7 +1063,80 @@ const fmtP = n => String(Math.round(n));
 const fmtD = n => (Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtCoeff = n => n.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-const medal = r => r===1?'🥇':r===2?'🥈':r===3?'🥉':'';
+
+/* ---------- icone: SVG a tratto, ereditano il colore del testo ---------- */
+const ICONS = {
+  list:    '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  trophy:  '<path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v1.5a3.5 3.5 0 0 1-3.4 3.5M7 5H4v1.5A3.5 3.5 0 0 0 7.4 10"/>',
+  flag:    '<path d="M5 21V3"/><path d="M5 4h14l-3.5 4.5L19 13H5"/>',
+  chart:   '<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>',
+  medal:   '<circle cx="12" cy="9" r="5.5"/><path d="M8.7 13.6 7 21l5-2.8 5 2.8-1.7-7.4"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  screen:  '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>',
+  hourglass:'<path d="M6 3h12M6 21h12"/><path d="M8 3v3.5c0 1.4.8 2.7 2 3.5l2 2-2 2c-1.2.8-2 2.1-2 3.5V21M16 3v3.5c0 1.4-.8 2.7-2 3.5l-2 2 2 2c1.2.8 2 2.1 2 3.5V21"/>',
+  lock:    '<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  pencil:  '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+  heart:   '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+  copy:    '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  close:   '<path d="M6 6l12 12M18 6L6 18"/>',
+  download:'<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14"/>',
+  upload:  '<path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M5 20h14"/>',
+  trash:   '<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',
+  up:      '<path d="M6 14l6-6 6 6"/>',
+  down:    '<path d="M6 10l6 6 6-6"/>',
+  reset:   '<path d="M4 5v5h5"/><path d="M5.6 15A8 8 0 1 0 6.4 8.3L4 10"/>',
+  dice:    '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
+  megaphone:'<path d="M4 10v4h3l8 4V6L7 10H4z"/><path d="M18.5 9a4 4 0 0 1 0 6"/>',
+  eye:     '<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/>',
+  eyeoff:  '<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 4l16 16"/>',
+  check:   '<path d="M5 12.5 10 17.5 19 7"/>',
+  bank:    '<path d="M3 9l9-5 9 5M5 9v9M9.5 9v9M14.5 9v9M19 9v9M3 20h18"/>',
+  phone:   '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+  alert:   '<path d="M12 4 3 20h18L12 4z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+  plus:    '<path d="M12 5v14M5 12h14"/>',
+  arrow:   '<path d="M5 12h14M13 6l6 6-6 6"/>',
+};
+const ic = (n, cls) => `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
+
+/* ---------- colori: scelta del testo (bianco o scuro) con il miglior contrasto ---------- */
+function lum(hex){
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return .2;
+  const n = parseInt(m[1],16);
+  const f = v => { v/=255; return v<=.03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); };
+  return .2126*f(n>>16&255) + .7152*f(n>>8&255) + .0722*f(n&255);
+}
+const INK_DARK = '#0a0e17';
+// testo e testo "inverso" (per etichette) da usare sopra uno sfondo fatto di questi colori
+function inkFor(cols){
+  const ls = cols.map(lum);
+  const cw = Math.min(...ls.map(l=>1.05/(l+.05)));
+  const cb = Math.min(...ls.map(l=>(l+.05)/(.0045+.05)));
+  return cw >= cb ? {fg:'#ffffff', rev:INK_DARK} : {fg:INK_DARK, rev:'#ffffff'};
+}
+// colore a metà strada fra due esadecimali (t da 0 a 1)
+function mixHex(a, b, t){
+  const pa = /^#?([0-9a-f]{6})$/i.exec(a||''), pb = /^#?([0-9a-f]{6})$/i.exec(b||'');
+  if(!pa || !pb) return a;
+  const na = parseInt(pa[1],16), nb = parseInt(pb[1],16);
+  return '#' + [16,8,0].map(s=>Math.round(((na>>s)&255)*(1-t) + ((nb>>s)&255)*t).toString(16).padStart(2,'0')).join('');
+}
+// testo più leggibile su un tratto [da, a] (0-1) del gradiente c1 → c2
+function inkSpan(c1, c2, from, to){
+  const cols = []; for(let i=0;i<=6;i++) cols.push(mixHex(c1, c2, from + (to-from)*i/6));
+  return inkFor(cols);
+}
+// variabili CSS di una contrada (colori della bandiera e del grafico)
+const cVars = c => `--c1:${c.c1};--c2:${c.c2};--cc:${c.chart}`;
+
+// avviso a comparsa (al posto dei vecchi alert per le conferme)
+let _toastT = null;
+function toast(msg, kind){
+  const el = document.getElementById('toast'); if(!el) return;
+  el.innerHTML = (kind==='err' ? ic('alert') : ic('check')) + '<span>'+esc(msg)+'</span>';
+  el.className = 'on' + (kind==='err' ? ' err' : '');
+  clearTimeout(_toastT);
+  _toastT = setTimeout(()=>{ el.className=''; }, 3200);
+}
 
 /* ===================== CONFIG MODIFICATA? ===================== */
 // segnala solo modifiche alle REGOLE di punteggio (coefficienti + tabella punti),
@@ -733,28 +1151,36 @@ const DEFAULT_SKELETON = configSkeleton(defaults());
 const configModificata = () => configSkeleton(state) !== DEFAULT_SKELETON;
 
 /* ===================== NAV / VISTE ===================== */
+// label = nome esteso (desktop), short = nome breve (barra in basso su telefono)
 const VIEWS = [
-  {id:'gare',     label:'⚑ Gare'},
-  {id:'palio',    label:'🏆 Classifica Palio'},
-  {id:'drappo',   label:'🛡️ Classifica Drappo'},
-  {id:'grafici',  label:'📈 Grafici'},
-  {id:'albo',     label:"🏅 Albo d'Oro"},
-  {id:'config',   label:'⚙ Impostazioni'},
-  {id:'present',  label:'🖥 Presentazione'},
+  {id:'gare',     label:'Gare',          short:'Gare',     ic:'list'},
+  {id:'palio',    label:'Palio',         short:'Palio',    ic:'trophy'},
+  {id:'drappo',   label:'Drappo',        short:'Drappo',   ic:'flag'},
+  {id:'grafici',  label:'Grafici',       short:'Grafici',  ic:'chart'},
+  {id:'albo',     label:"Albo d'Oro",    short:'Albo',     ic:'medal'},
+  {id:'config',   label:'Impostazioni',  short:'Setup',    ic:'sliders'},
+  {id:'present',  label:'Presentazione', short:'Schermo',  ic:'screen'},
 ];
 let current = 'gare';
-function renderNav(){
-  document.getElementById('nav').innerHTML = VIEWS.map(v=>
-    `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`
+function navHTML(items){
+  return items.map(v=>
+    `<button type="button" class="tab${v.id===current?' on':''}" data-action="nav" data-view="${v.id}"${v.id===current?' aria-current="page"':''}>`+
+    `<span class="tab-in">${ic(v.ic)}<span class="nl">${v.label}</span><span class="ns">${v.short||v.label}</span></span></button>`
   ).join('');
+}
+function renderNav(){
+  document.getElementById('top').classList.add('many');      // molte schede: barra su due righe
+  document.getElementById('nav').innerHTML = navHTML(VIEWS);
 }
 
 function render(){
   if(cloudOn && !isAdmin){ renderViewer(); return; }   // area pubblica
   document.getElementById('nav').style.display='';
+  // la scheda "attesa" esiste solo per il pubblico: entrando come admin si riparte dalle gare
+  if(!VIEWS.some(v=>v.id===current && v.id!=='present')) current = 'gare';
   renderNav();
   const app = document.getElementById('app');
-  const prevScroll = (current==='gare') ? scrollPosOfMatrix() : 0;
+  const prevScroll = (current==='gare') ? scrollPosOfMatrix() : null;
   if(current==='gare')      app.innerHTML = viewGare();
   else if(current==='palio')  app.innerHTML = viewClassifica('palio');
   else if(current==='drappo') app.innerHTML = viewClassifica('drappo');
@@ -764,9 +1190,9 @@ function render(){
   if(current==='gare') restoreMatrixScroll(prevScroll);
   if(current==='grafici') drawCharts();
 }
-let _matrixScroll = 0;
-function scrollPosOfMatrix(){ const w=document.querySelector('.matrix-wrap'); return w?w.scrollLeft:0; }
-function restoreMatrixScroll(x){ const w=document.querySelector('.matrix-wrap'); if(w) w.scrollLeft=x; }
+// la matrice delle gare scorre in entrambe le direzioni: si ricorda dove eravamo ad ogni ridisegno
+function scrollPosOfMatrix(){ const w=document.querySelector('.matrix-wrap'); return w ? {x:w.scrollLeft, y:w.scrollTop} : null; }
+function restoreMatrixScroll(p){ const w=document.querySelector('.matrix-wrap'); if(w && p){ w.scrollLeft=p.x; w.scrollTop=p.y; } }
 
 /* ===================== VISTA PUBBLICA (visitatori) ===================== */
 function renderViewer(){
@@ -775,13 +1201,14 @@ function renderViewer(){
   if(!publicLoaded){ nav.style.display='none'; app.innerHTML = viewLoading(); return; }
   const revealed = !!(publicData && publicData.revealed===true);
   // l'Albo d'Oro è sempre accessibile, anche a risultati nascosti
+  const albo = VIEWS.find(v=>v.id==='albo');
   const items = revealed
     ? VIEWS.filter(v=>['palio','drappo','grafici','albo'].includes(v.id))
-    : [{id:'attesa', label:'🏆 Risultati'}, {id:'albo', label:"🏅 Albo d'Oro"}];
+    : [{id:'attesa', label:'Risultati', short:'Risultati', ic:'hourglass'}, albo];
   if(!items.some(v=>v.id===current)) current = revealed ? 'palio' : 'attesa';
   nav.style.display='';
-  nav.innerHTML = items.map(v=>
-    `<button data-action="nav" data-view="${v.id}" class="${v.id===current?'active':''}">${v.label}</button>`).join('');
+  document.getElementById('top').classList.remove('many');
+  nav.innerHTML = navHTML(items);
   const sb = supportBannerCompact();
   if(current==='albo'){ app.innerHTML = viewAlbo() + sb; return; }
   const ann = announceBanner();
@@ -793,30 +1220,36 @@ function renderViewer(){
   const snap = migrate(normalizeState(JSON.parse(JSON.stringify(publicData.snapshot||{}))));
   if(snap) state = snap;
   const lab = publicData.label && publicData.label.trim() ? publicData.label : 'Classifica ufficiale';
-  const banner = `<div class="viewer-note">🏁 <b>${esc(lab)}</b></div>`;
-  if(current==='palio')       app.innerHTML = ann+banner+viewClassifica('palio')+sb;
-  else if(current==='drappo') app.innerHTML = ann+banner+viewClassifica('drappo')+sb;
-  else if(current==='grafici')app.innerHTML = ann+banner+viewGrafici()+sb;
+  if(current==='palio')       app.innerHTML = ann+viewClassifica('palio', lab)+sb;
+  else if(current==='drappo') app.innerHTML = ann+viewClassifica('drappo', lab)+sb;
+  else if(current==='grafici')app.innerHTML = ann+viewGrafici(lab)+sb;
   if(current==='grafici') drawCharts();
 }
 function supportBannerCompact(){
-  return `<div class="support-banner compact" data-action="donate-open" title="Scopri come donare">🤝 <b>Sostieni il Palio</b> · ogni contributo aiuta a coprire le spese <span class="sb-cta">💛 Dona</span></div>`;
+  return `<div class="support-banner compact" data-action="donate-open" role="button" tabindex="0" title="Scopri come donare">
+    <span class="sb-ic">${ic('heart')}</span>
+    <span class="sb-tx"><b>Sostieni il Palio</b> · ogni contributo aiuta a coprire le spese</span>
+    <span class="sb-cta">Dona ${ic('arrow')}</span></div>`;
+}
+function supportBannerFull(){
+  return `<div class="support-banner" data-action="donate-open" role="button" tabindex="0" title="Scopri come donare">
+    <span class="sb-ic">${ic('heart')}</span>
+    <span class="sb-tx"><b>Supporta la tua Contrada</b> come Atleta o Tifoso, a te la scelta: la tua partecipazione è la prima cosa che rende possibile il Palio! La seconda, è sconfiggere le spese del Palio: <b>unisciti alla sfida</b>, qualsiasi contributo economico sarà prezioso!</span>
+    <span class="sb-cta">Scopri come donare ${ic('arrow')}</span></div>`;
 }
 function viewLoading(){
-  return `<div class="card" style="text-align:center; padding:70px 22px">
-    <div class="loader-ring"></div>
-    <p class="muted" style="margin-top:18px; letter-spacing:1px">Caricamento…</p>
+  return `<div class="loading" role="status" aria-label="Caricamento">
+    <div class="loader" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <p>Caricamento…</p>
   </div>`;
 }
 function viewWait(msg){
-  return `<div class="card" style="text-align:center; padding:56px 22px">
-    <div style="font-size:3.6rem; line-height:1">🏆</div>
-    <h2 style="color:var(--accent); font-size:clamp(1.3rem,3.2vw,2rem); margin:16px auto 10px; max-width:680px">${esc(msg||DEFAULT_WAIT_MSG)}</h2>
-    <p class="muted">Le classifiche saranno svelate dall'organizzazione. Tieni d'occhio questa pagina!</p>
-  </div>
-  <div class="support-banner" data-action="donate-open" title="Scopri come donare">🤝 <b>Supporta la tua Contrada</b> come Atleta o Tifoso, a te la scelta:<br>la tua partecipazione è la prima cosa che rende possibile il Palio!<br>
-    La seconda, è sconfiggere le spese del Palio: <b>unisciti alla sfida</b>, qualsiasi contributo economico sarà prezioso!<br>
-    <span class="sb-cta">💛 Clicca qui per scoprire come donare</span></div>`;
+  return `<section class="wait">
+    <div class="wait-art" aria-hidden="true">${ic('hourglass')}</div>
+    <div class="eyebrow"><i class="dot"></i>Risultati in arrivo</div>
+    <h1 class="wait-msg">${esc(msg||DEFAULT_WAIT_MSG)}</h1>
+    <p class="wait-sub">Le classifiche saranno svelate dall'organizzazione. Tieni d'occhio questa pagina!</p>
+  </section>${supportBannerFull()}`;
 }
 
 /* ===================== DONAZIONI ===================== */
@@ -825,17 +1258,17 @@ const DON_SATISPAY = 'https://web.satispay.com/download/qrcode/S6Y-CON--3FC8BE03
 function openDonate(){
   document.getElementById('donGrid').innerHTML = `
     <div class="don-card">
-      <h3>🏦 Bonifico bancario</h3>
+      <h3>${ic('bank')} Bonifico bancario</h3>
       <div class="don-row">Intestato ad <b>Associazione Residenti Malaspina</b> — storico sponsor del Palio, in supporto alle attività amministrative-contabili.</div>
       <div class="iban">${DON_IBAN}</div>
-      <button class="btn gold" data-action="copy-iban" style="width:100%">📋 Copia IBAN</button>
+      <button class="btn gold block" data-action="copy-iban">${ic('copy')} Copia IBAN</button>
       <div class="don-row">Causale: <b>Supporto Palio</b></div>
     </div>
     <div class="don-card">
-      <h3>📱 Satispay</h3>
+      <h3>${ic('phone')} Satispay</h3>
       <div class="don-row">Dona in pochi secondi dal telefono: tocca il pulsante e completa la donazione con l'app <b>Satispay</b>.</div>
-      <a class="btn-satispay" href="${DON_SATISPAY}" target="_blank" rel="noopener">❤️ Dona con Satispay</a>
-      <div class="don-row" style="font-size:.78rem; color:var(--text-dim); margin-top:10px">Il conto Satispay è intestato a <b>Martina Belfiori</b>, che provvederà a devolvere integralmente le donazioni ricevute all'Associazione Residenti Malaspina.</div>
+      <a class="btn-satispay" href="${DON_SATISPAY}" target="_blank" rel="noopener">${ic('heart')} Dona con Satispay</a>
+      <div class="don-row don-note">Il conto Satispay è intestato a <b>Martina Belfiori</b>, che provvederà a devolvere integralmente le donazioni ricevute all'Associazione Residenti Malaspina.</div>
     </div>`;
   document.getElementById('donate').classList.add('on');
 }
@@ -846,12 +1279,16 @@ function openCwin(cid){
   const c = state.contrade.find(x=>x.id===cid);
   if(!c) return;
   const won = state.gare.filter(g=>g.pos[cid]===1);
+  const kL = inkSpan(c.c1, c.c2, 0, .55), kR = inkSpan(c.c1, c.c2, .75, 1);
   const list = won.length
-    ? `<ul class="cwin-list">${won.map(g=>`<li style="--cc:${c.chart}">${esc(g.sport)}${g.categoria?` <span class="cwc">· ${esc(g.categoria)}</span>`:''}</li>`).join('')}</ul>`
-    : `<p class="muted" style="text-align:center; margin-top:14px">Nessuna competizione vinta${state.gare.some(disputata)?'':' (gare non ancora disputate)'}.</p>`;
+    ? `<ul class="cwin-list">${won.map(g=>`<li style="${cVars(c)}">${ic('trophy')}<span>${esc(g.sport)}${g.categoria?` <span class="cwc">· ${esc(g.categoria)}</span>`:''}</span></li>`).join('')}</ul>`
+    : `<p class="cwin-empty">Nessuna competizione vinta${state.gare.some(disputata)?'':' (gare non ancora disputate)'}.</p>`;
   document.getElementById('cwinBody').innerHTML = `
-    <h2 style="color:${c.chart}">${esc(c.nome)}</h2>
-    <p class="muted" style="text-align:center; margin:0">🏆 Competizioni vinte: <b style="color:var(--accent)">${won.length}</b></p>
+    <div class="cw-head" style="--h1:${c.c1};--h2:${c.c2};--hink:${kL.fg};--hink2:${kR.fg}">
+      <span class="cw-k">Competizioni vinte</span>
+      <h2>${esc(c.nome)}</h2>
+      <b class="cw-n">${won.length}</b>
+    </div>
     ${list}`;
   document.getElementById('cwin').classList.add('on');
 }
@@ -880,55 +1317,56 @@ function confettiHTML(colors, n){
   }
   return s;
 }
-const ANN_TYPES = [['palio','🏆','Vincitore del Palio'],['drappo','🛡️','Vincitore del Drappo']];
+const ANN_TYPES = [['palio','trophy','Vincitore del Palio'],['drappo','flag','Vincitore del Drappo']];
 const annWinners = it => it ? (Array.isArray(it.winners) ? it.winners : Object.values(it.winners||{})) : [];
 function announceBanner(){
   const a = publicData && publicData.announce;
   if(!a) return '';
   const present = ANN_TYPES.filter(([t])=> a[t] && annWinners(a[t]).length);
   if(!present.length) return '';
-  const colors = [...new Set(present.flatMap(([t])=>annWinners(a[t]).flatMap(w=>[w.c1,w.c2])).concat(['#d4af37','#ffffff']))];
+  const colors = [...new Set(present.flatMap(([t])=>annWinners(a[t]).flatMap(w=>[w.c1,w.c2])).concat(['#ffc72c','#ffffff']))];
   const blocks = present.map(([t,icon,tit])=>{
     const ws = annWinners(a[t]);
-    const names = ws.map(w=>`<span style="background:linear-gradient(90deg,${w.c1},${w.c2});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(w.nome)}</span>`);
+    const names = ws.map(w=>{
+      const k = inkSpan(w.c1, w.c2, .12, .88);
+      return `<span class="a-name" style="--h1:${w.c1};--h2:${w.c2};--hink:${k.fg}"><span>${esc(w.nome)}</span></span>`;
+    });
     const verb = ws.length>1 ? 'Vincono' : 'Vince';
     return `<div class="a-block">
-      <div class="a-k">${icon} ${tit} ${icon}</div>
-      <div class="a-win">${verb} ${names.join(' e ')}!</div>
+      <div class="a-k">${ic(icon)}<span>${tit}</span>${ic(icon)}</div>
+      <div class="a-win"><span class="a-verb">${verb}</span>${names.join('<span class="a-and">e</span>')}<span class="a-bang">!</span></div>
     </div>`;
   }).join('');
-  return `<div class="announce">${confettiHTML(colors)}
-    ${blocks}
-  </div>`;
+  return `<div class="announce" role="status">${confettiHTML(colors)}${blocks}</div>`;
 }
 function buildAnnCard(){
   if(!cloudOn) return '';
   const a = publicData && publicData.announce;
   const parts = ANN_TYPES.filter(([t])=> a && a[t] && annWinners(a[t]).length)
-    .map(([t,icon])=> icon+' '+annWinners(a[t]).map(w=>w.nome).join(' e '));
+    .map(([t])=> (t==='drappo'?'Drappo':'Palio')+': '+annWinners(a[t]).map(w=>w.nome).join(' e '));
   const status = parts.length
-    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Attivo: ${esc(parts.join(' · '))}</span>`
-    : `<span class="pill" style="border-color:var(--border);color:var(--text-dim)">⚪ Nessun annuncio</span>`;
+    ? `<span class="pill ok"><i class="dot"></i>Attivo · ${esc(parts.join(' · '))}</span>`
+    : `<span class="pill">Nessun annuncio</span>`;
   const disp = state.gare.filter(disputata).length;
   const lead = t => classifica(t).filter(e=>e.rank===1).map(e=>e.c.nome).join(' e ');
   return `<div class="card">
-    <div class="sectionTitle"><h2>📣 Annuncio vincitore (pubblico)</h2> ${status}</div>
-    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli 🎉) per il vincitore del <b>Palio</b> e/o del <b>Drappo</b> — chi è 1º in classifica. I due annunci sono <b>indipendenti</b>: puoi pubblicarli insieme o separatamente, restano entrambi finché non li rimuovi.</p>
-    <div class="row" style="margin-top:10px">
-      <select class="tipo" data-action="ann-tipo" style="min-width:250px; max-width:100%">
-        <option value="palio">🏆 Vincitore del Palio${disp?(' — '+esc(lead('palio'))):''}</option>
-        <option value="drappo">🛡️ Vincitore del Drappo${disp?(' — '+esc(lead('drappo'))):''}</option>
-        <option value="entrambi">🏆+🛡️ Entrambi (Palio e Drappo)</option>
+    <div class="sectionTitle"><h2>Annuncio vincitore (pubblico)</h2> ${status}</div>
+    <p class="hint">Mostra sulla home del pubblico un <b>banner di festeggiamento</b> (con coriandoli) per il vincitore del <b>Palio</b> e/o del <b>Drappo</b> — chi è 1º in classifica. I due annunci sono <b>indipendenti</b>: puoi pubblicarli insieme o separatamente, restano entrambi finché non li rimuovi.</p>
+    <div class="row" style="margin-top:12px">
+      <select class="tipo wide" data-action="ann-tipo">
+        <option value="palio">Vincitore del Palio${disp?(' — '+esc(lead('palio'))):''}</option>
+        <option value="drappo">Vincitore del Drappo${disp?(' — '+esc(lead('drappo'))):''}</option>
+        <option value="entrambi">Entrambi (Palio e Drappo)</option>
       </select>
-      <button class="btn gold" data-action="ann-publish">📣 Annuncia al pubblico</button>
-      <button class="btn" data-action="ann-clear">🙈 Rimuovi (la scelta sopra)</button>
+      <button class="btn gold" data-action="ann-publish">${ic('megaphone')} Annuncia al pubblico</button>
+      <button class="btn" data-action="ann-clear">${ic('eyeoff')} Rimuovi (la scelta sopra)</button>
     </div>
   </div>`;
 }
 
 /* ===================== VISTA: ALBO D'ORO E CAPITANI ===================== */
 function viewAlbo(){
-  const cinfo = cid => state.contrade.find(c=>c.id===cid) || {nome:cid, chart:'#888'};
+  const cinfo = cid => state.contrade.find(c=>c.id===cid) || {nome:cid, chart:'#888', c1:'#888', c2:'#888'};
   // albi calcolati dalle vittorie: oro = Palio, argento = Drappo
   const wins = {};
   ALBO.forEach(r=>{
@@ -939,25 +1377,27 @@ function viewAlbo(){
     .sort((a,b)=> (b[1][key].length-a[1][key].length) || cinfo(a[0]).nome.localeCompare(cinfo(b[0]).nome,'it'))
     .map(([cid,w])=>{
       const c=cinfo(cid);
-      return `<div class="hrow" style="--cc:${c.chart}">
+      return `<div class="hrow" style="${cVars(c)}">
         <span class="hcount">${w[key].length}</span>
-        <span class="hname" style="color:${c.chart}">${esc(c.nome)}</span>
-        <span class="hyears">${w[key].join(' · ')}</span></div>`;
+        <span class="hbody"><span class="hname">${esc(c.nome)}</span><span class="hyears">${w[key].join(' · ')}</span></span>
+      </div>`;
     }).join('') || '<p class="muted">Ancora nessuna vittoria.</p>';
 
   const cellInfo = (r,cid)=>{
     const both = r.palio===cid && r.drappo===cid;
     return {
       cls: both?'win-pd':(r.palio===cid?'win-p':(r.drappo===cid?'win-d':'')),
-      badge: both?' 🏆🛡️':(r.palio===cid?' 🏆':(r.drappo===cid?' 🛡️':''))
+      badge: both ? `<span class="wi">${ic('trophy')}${ic('flag')}</span>`
+           : r.palio===cid ? `<span class="wi">${ic('trophy')}</span>`
+           : r.drappo===cid ? `<span class="wi">${ic('flag')}</span>` : ''
     };
   };
   const head = ALBO_COLS.map(cid=>{const c=cinfo(cid);
-    return `<th><span style="color:${c.chart}">${esc(c.nome)}</span></th>`;}).join('');
+    return `<th style="${cVars(c)}"><span class="ah">${esc(c.nome)}</span></th>`;}).join('');
   const rows = ALBO.map(r=>{
     const cells = ALBO_COLS.map(cid=>{
       const {cls,badge}=cellInfo(r,cid);
-      return `<td class="${cls}">${esc(r.cap[cid]||'')}${badge}</td>`;
+      return `<td class="${cls}"><span class="cap">${esc(r.cap[cid]||'')}</span>${badge}</td>`;
     }).join('');
     return `<tr><td class="anno">${r.anno}</td>${cells}</tr>`;
   }).join('');
@@ -965,30 +1405,31 @@ function viewAlbo(){
     const rws = ALBO_COLS.map(cid=>{
       const c=cinfo(cid);
       const {cls,badge}=cellInfo(r,cid);
-      return `<div class="arow ${cls}">
-        <span class="an" ${cls?'':`style="color:${c.chart}"`}>${esc(c.nome)}</span>
-        <span>${esc(r.cap[cid]||'')}${badge}</span></div>`;
+      return `<div class="arow ${cls}" style="${cVars(c)}">
+        <span class="an">${esc(c.nome)}</span>
+        <span class="av">${esc(r.cap[cid]||'')}${badge}</span></div>`;
     }).join('');
     return `<div class="acard"><h3>${r.anno}</h3>${rws}</div>`;
   }).join('');
   const legend = `<div class="albo-legend">
-    <span><i style="background:linear-gradient(180deg,#f2c94c,#cfa52f)"></i>Vittoria Palio 🏆</span>
-    <span><i style="background:linear-gradient(180deg,#dde3e9,#9fa9b3)"></i>Vittoria Drappo 🛡️</span>
-    <span><i style="background:linear-gradient(135deg,#f2c94c,#d4af37 46%,#dde3e9 54%,#9fa9b3)"></i>Doppietta (Palio + Drappo)</span>
+    <span><i class="sw sw-p"></i>${ic('trophy')} Vittoria Palio</span>
+    <span><i class="sw sw-d"></i>${ic('flag')} Vittoria Drappo</span>
+    <span><i class="sw sw-pd"></i>Doppietta (Palio + Drappo)</span>
   </div>`;
   return `
-  <div class="grid2">
-    <div class="card">
-      <div class="sectionTitle"><h2>🏆 Albo d'Oro · Palio</h2></div>
+  ${viewHead("Albo d'<span class=\"g\">Oro</span>", {eyebrow:'Palio Malaspina · dal '+ALBO[0].anno})}
+  <div class="grid2 hall">
+    <div class="card hall-p">
+      <div class="sectionTitle"><span class="st-ic">${ic('trophy')}</span><h2>Palio</h2><span class="pill gold">Oro</span></div>
       <div class="honor">${honor('p')}</div>
     </div>
-    <div class="card">
-      <div class="sectionTitle"><h2>🛡️ Albo d'Oro · Drappo</h2></div>
+    <div class="card hall-d">
+      <div class="sectionTitle"><span class="st-ic">${ic('flag')}</span><h2>Drappo</h2><span class="pill silver">Argento</span></div>
       <div class="honor">${honor('d')}</div>
     </div>
   </div>
   <div class="card">
-    <div class="sectionTitle"><h2>Capitani · Palio Malaspina</h2></div>
+    <div class="sectionTitle"><h2>Capitani</h2><span class="pill">Palio Malaspina</span></div>
     ${isMobile() ? cards : `<div class="albo-wrap"><table class="albo">
       <thead><tr><th>Edizione</th>${head}</tr></thead>
       <tbody>${rows}</tbody></table></div>`}
@@ -999,13 +1440,30 @@ function viewAlbo(){
 /* ===================== VISTA: GARE & INSERIMENTO ===================== */
 const isMobile = () => window.innerWidth < 760;
 
+// testata comune alle viste: sopratitolo + titolo grande (+ controlli a destra)
+function viewHead(title, o){
+  o = o||{};
+  return `<div class="vhead">
+    <div class="vh-l">
+      <div class="eyebrow">${o.live?'<i class="dot"></i>':''}${esc(o.eyebrow||'Palio Malaspina 2026')}</div>
+      <h1 class="vtitle">${title}</h1>
+    </div>
+    ${o.right?`<div class="vh-r">${o.right}</div>`:''}
+  </div>`;
+}
+// avanzamento: una tacca per gara, accesa se disputata
+function progressHTML(){
+  const n = state.gare.length, d = state.gare.filter(disputata).length;
+  const ticks = state.gare.map(g=>`<i${disputata(g)?' class="on"':''}></i>`).join('');
+  return `<div class="prog"><div class="prog-l"><b>${d}</b><span>/ ${n} gare disputate</span></div><div class="ticks" aria-hidden="true">${ticks}</div></div>`;
+}
+const resetBanner = () => (canEdit() && configModificata())
+  ? `<div class="banner">${ic('alert')}<span>Configurazione modificata rispetto ai valori predefiniti.</span>
+      <button class="btn sm" data-action="reset-all">Ripristina tutto</button></div>` : '';
+
 // versione mobile: una scheda per gara (niente scroll orizzontale)
 function viewGareMobile(){
   const C = state.contrade;
-  const disp = state.gare.filter(disputata);
-  const banner = (canEdit() && configModificata())
-    ? `<div class="banner">⚠ Configurazione modificata rispetto ai valori predefiniti.
-        <button class="btn sm" data-action="reset-all">Ripristina tutto</button></div>` : '';
   let lastSport = null;
   const cards = state.gare.map((g,i)=>{
     const nd = !disputata(g);
@@ -1019,15 +1477,15 @@ function viewGareMobile(){
       const dup = p!=null && counts[p]>1;
       const opts = ['<option value="">—</option>'].concat([1,2,3,4,5].map(n=>
         `<option value="${n}" ${p===n?'selected':''}>${n}ª</option>`)).join('');
-      const pts = p!=null ? `${fmtP(puntiPalio(g,c.id))}p · ${fmtD(puntiDrappo(g,c.id))}` : '';
-      return `<div class="mrow ${dup?'dup':''}">
-        <span class="mname"><i style="background:linear-gradient(90deg,${c.c1},${c.c2})"></i>${esc(c.nome)}</span>
-        <select class="cell ${p!=null?'set':''}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}" ${ED()}>${opts}</select>
+      const pts = p!=null ? `<b>${fmtP(puntiPalio(g,c.id))}</b> pt · Drappo ${fmtD(puntiDrappo(g,c.id))}` : '';
+      return `<div class="mrow${dup?' dup':''}" style="${cVars(c)}">
+        <span class="mname"><i></i>${esc(c.nome)}</span>
+        <select class="cell pp${p!=null?p:0}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}" aria-label="${esc(c.nome)}" ${ED()}>${opts}</select>
         <span class="mpts">${pts}</span>
       </div>`;
     }).join('');
     const label = esc(g.categoria) || esc(g.sport);
-    return hdr + `<div class="gcard ${nd?'nd':''}">
+    return hdr + `<div class="gcard${nd?' nd':''}">
       <div class="gcard-head">
         <div class="gcard-title"><span class="gnum">${i+1}</span>${label}</div>
         <select class="tipo" data-action="tipo" data-gid="${g.id}" title="Tipo di punteggio" ${ED()}>${tipoSel}</select>
@@ -1035,22 +1493,20 @@ function viewGareMobile(){
       ${rows}
     </div>`;
   }).join('');
-  return `${banner}
-  <div class="card">
-    <div class="sectionTitle"><h2>Gare &amp; Inserimento</h2>
-      <span class="pill" style="border-color:var(--accent);color:var(--accent)">${disp.length}/${state.gare.length} disputate</span></div>
-    ${cards}
-    <p class="hint">Posizione 1ª–5ª per contrada. <b>—</b> = gara non disputata. Chi è assente va messo <b>5ª</b>. I pareggi sono consentiti.</p>
-  </div>`;
+  return `${resetBanner()}
+  ${viewHead('Gare &amp; <span class="g">Inserimento</span>', {eyebrow:'Pannello organizzatore'})}
+  ${progressHTML()}
+  ${cards}
+  <p class="hint">Posizione 1ª–5ª per contrada. <b>—</b> = gara non disputata. Chi è assente va messo <b>5ª</b>. I pareggi sono consentiti.</p>`;
 }
 
 function viewGare(){
   if(isMobile()) return viewGareMobile();
-  const {totP,totD,disp} = calcola();
+  const {totP,totD} = calcola();
   const C = state.contrade;
-  const head = C.map(c=>`<th>
-      <span class="cname" style="color:${c.chart}">${esc(c.nome)}</span>
-      <span class="cbar" style="background:linear-gradient(90deg,${c.c1},${c.c2})"></span>
+  const head = C.map(c=>`<th class="chead" style="${cVars(c)}">
+      <span class="cname">${esc(c.nome)}</span>
+      <span class="cbar"></span>
       <span class="coeff">coeff. ${fmtCoeff(c.coeff)}</span></th>`).join('');
   let lastSport = null;
   const colCount = 2 + C.length;
@@ -1060,7 +1516,7 @@ function viewGare(){
     let groupHdr = '';
     if(g.sport !== lastSport){
       lastSport = g.sport;
-      groupHdr = `<tr class="grouprow"><td class="grouphdr" colspan="${colCount}">${esc(g.sport)}</td></tr>`;
+      groupHdr = `<tr class="grouprow"><td class="grouphdr" colspan="${colCount}"><span>${esc(g.sport)}</span></td></tr>`;
     }
     // rileva pareggi (stessa posizione su >1 contrada)
     const counts = {};
@@ -1071,8 +1527,8 @@ function viewGare(){
       const opts = ['<option value="">—</option>'].concat([1,2,3,4,5].map(n=>
         `<option value="${n}" ${p===n?'selected':''}>${n}ª</option>`)).join('');
       const pts = p!=null ? `${fmtP(puntiPalio(g,c.id))}p · ${fmtD(puntiDrappo(g,c.id))}` : '';
-      return `<td class="cell ${dup?'dup':''}" ${dup?'title="Pareggio: stessa posizione su più contrade (consentito)"':''}>
-        <select class="cell ${p!=null?'set':''}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}" ${ED()}>${opts}</select>
+      return `<td class="cell${dup?' dup':''}" ${dup?'title="Pareggio: stessa posizione su più contrade (consentito)"':''}>
+        <select class="cell pp${p!=null?p:0}" data-action="pos" data-gid="${g.id}" data-cid="${c.id}" aria-label="${esc(c.nome)}, gara ${i+1}" ${ED()}>${opts}</select>
         <span class="cellpts">${pts}</span></td>`;
     }).join('');
     const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
@@ -1087,16 +1543,13 @@ function viewGare(){
     </tr>`;
   }).join('');
   const footP = state.contrade.map(c=>`<td><span class="tp">${fmtP(totP[c.id])}</span><span class="td">Dr. ${fmtD(totD[c.id])}</span></td>`).join('');
-  const banner = (canEdit() && configModificata())
-    ? `<div class="banner">⚠ Configurazione modificata rispetto ai valori predefiniti.
-        <button class="btn sm" data-action="reset-all">Ripristina tutto</button></div>` : '';
   const vnote = (cloudOn && !isAdmin)
-    ? `<div class="viewer-note">👁 <b>Sola visione</b> — i risultati li inserisce l'admin. La classifica si aggiorna da sola in tempo reale. (Sei l'organizzatore? Premi <b>🔒 Solo visione</b> in alto e inserisci la password.)</div>` : '';
+    ? `<div class="viewer-note">${ic('eye')}<span><b>Sola visione</b> — i risultati li inserisce l'admin. La classifica si aggiorna da sola in tempo reale. (Sei l'organizzatore? Premi <b>Admin</b> in alto e inserisci la password.)</span></div>` : '';
   return `
-  ${vnote}${banner}
-  <div class="card">
-    <div class="sectionTitle"><h2>Gare &amp; Inserimento</h2>
-      <span class="pill" style="border-color:var(--accent);color:var(--accent)">${disp.length}/${state.gare.length} gare disputate</span></div>
+  ${vnote}${resetBanner()}
+  ${viewHead('Gare &amp; <span class="g">Inserimento</span>', {eyebrow:'Pannello organizzatore'})}
+  ${progressHTML()}
+  <div class="card flush">
     <div class="matrix-wrap">
       <table class="matrix">
         <thead><tr>
@@ -1108,108 +1561,197 @@ function viewGare(){
         </tr></tfoot>
       </table>
     </div>
-    <p class="hint">Imposta la posizione 1ª–5ª di ogni contrada. <b>—</b> = gara non ancora disputata (esclusa da classifiche e grafici).
+    <p class="hint pad">Imposta la posizione 1ª–5ª di ogni contrada. <b>—</b> = gara non ancora disputata (esclusa da classifiche e grafici).
       Una contrada assente va messa <b>5ª</b>. I pareggi sono consentiti (cella evidenziata in ambra).
       Il <b>Tipo</b> indica quante contrade partecipano (Punti 5/4/3) o la competizione (B = Burraco, T = Gara torte).</p>
   </div>`;
 }
 
 /* ===================== VISTA: CLASSIFICHE ===================== */
-function viewClassifica(tipo){
+// selettore Palio | Drappo (stesse viste della navigazione)
+function tipoSwitch(tipo){
+  return `<div class="seg" role="group" aria-label="Classifica">` +
+    [['palio','Palio','trophy'],['drappo','Drappo','flag']].map(([id,l,i])=>
+      `<button type="button" class="seg-b${tipo===id?' on':''}" data-action="nav" data-view="${id}">${ic(i)}${l}</button>`).join('') +
+    `</div>`;
+}
+// sfondo a gradiente per una o più contrade (più contrade = fasce affiancate)
+function multiGradient(cs){
+  if(cs.length===1) return `${cs[0].c1}, ${cs[0].c2}`;
+  const n = cs.length;
+  return cs.map((c,i)=>`${c.c1} ${(i/n*100).toFixed(0)}%, ${c.c2} ${((i+1)/n*100-7).toFixed(0)}%`).join(', ');
+}
+
+function viewClassifica(tipo, lab){
   const arr = classifica(tipo);
-  const max = Math.max(1, ...arr.map(e=>e.val));
+  const {disp} = calcola();
+  const started = disp.length > 0;
   const isDr = tipo==='drappo';
+  const fv = v => isDr ? fmtD(v) : fmtP(v);
+  const max = Math.max(1, ...arr.map(e=>e.val));
+  const lead = arr[0].val;
+  const leaders = started ? arr.filter(e=>e.rank===1) : [];
+  const runner = started ? arr.find(e=>e.rank>1) : null;
+
+  // in testa: grande striscia nei colori della contrada
+  let hero;
+  if(started){
+    const multi = leaders.length>1;
+    const names = leaders.map(e=>esc(e.c.nome)).join('<span class="amp">&amp;</span>');
+    // un solo primo: il testo a sinistra (nome) e quello a destra (punteggio) hanno il colore più leggibile sul proprio tratto
+    const c0 = leaders[0].c, kL = inkSpan(c0.c1, c0.c2, 0, .55), kR = inkSpan(c0.c1, c0.c2, .72, 1);
+    const inkVars = multi ? '' : `;--hink:${kL.fg};--hrev:${kL.rev};--hink2:${kR.fg}`;
+    hero = `<section class="hero${multi?' tie':''}" style="--hg:${multiGradient(leaders.map(e=>e.c))}${inkVars}">
+      <div class="hero-in">
+        <div class="hero-k"><span class="tag">${ic(isDr?'flag':'trophy')}${multi?'In testa a pari merito':'In testa'}</span></div>
+        <div class="hero-name${multi?' multi':''}">${names}</div>
+        <div class="hero-meta">${runner ? `Vantaggio <b>+${fv(lead-runner.val)}</b> su ${esc(runner.c.nome)}` : ''}</div>
+      </div>
+      <div class="hero-score"><b>${fv(lead)}</b><span>${isDr?'punti drappo':'punti'}</span></div>
+    </section>`;
+  } else {
+    hero = `<section class="hero idle">
+      <div class="hero-in">
+        <div class="hero-k"><span class="tag">${ic(isDr?'flag':'trophy')}Si parte</span></div>
+        <div class="hero-name">Nessuna gara disputata</div>
+        <div class="hero-meta">La classifica prenderà forma dopo le prime gare.</div>
+      </div>
+    </section>`;
+  }
+
   const rows = arr.map(e=>{
-    const cls = e.rank===1?'p1':e.rank===2?'p2':e.rank===3?'p3':'';
-    const val = isDr ? fmtD(e.val) : fmtP(e.val);
-    const sub = isDr ? `coeff. ${fmtCoeff(e.c.coeff)}` : '';
+    const cls = !started ? '' : e.rank===1?' p1':e.rank===2?' p2':e.rank===3?' p3':'';
+    const pct = started ? Math.max(3, e.val/max*100) : 0;
     const wc = state.gare.filter(g=>g.pos[e.c.id]===1).length;
-    return `<div class="srow ${cls}" style="--cc:${e.c.chart}">
-      <div class="rank">${e.rank}<span class="medal">${medal(e.rank)}</span></div>
-      <div><div class="nome clickable" data-action="cwin" data-cid="${e.c.id}" style="color:${e.c.chart}">${esc(e.c.nome)} <span class="cwin-hint">🏆 ${wc}</span></div>
-        ${sub?`<div class="sub">${sub}</div>`:''}
-        <div class="bar" style="width:${Math.max(4,e.val/max*100)}%;background:linear-gradient(90deg,${e.c.c1},${e.c.c2})"></div></div>
-      <div class="tot">${val}</div>
+    const gap = !started ? '' : (e.rank===1 ? 'In testa' : '−'+fv(lead-e.val));
+    return `<div class="srow${cls}" style="${cVars(e.c)}">
+      <div class="rk">${started?e.rank:'–'}</div>
+      <div class="info">
+        <button type="button" class="nome clickable" data-action="cwin" data-cid="${e.c.id}">${esc(e.c.nome)}<span class="cwin-hint" title="Competizioni vinte">${ic('trophy')}${wc}</span></button>
+        <div class="meter"><i style="width:${pct.toFixed(1)}%"></i></div>
+        ${isDr?`<div class="sub">coeff. ${fmtCoeff(e.c.coeff)}</div>`:''}
+      </div>
+      <div class="sc"><b class="tot">${fv(e.val)}</b><span class="gap">${gap}</span></div>
     </div>`;
   }).join('');
-  return `<div class="card">
-    <div class="sectionTitle"><h2>${isDr?'Classifica Drappo':'Classifica Palio'}</h2></div>
-    <div class="standings">${rows}</div>
-  </div>`;
+
+  return `${viewHead(`Classifica <span class="g${isDr?' s':''}">${isDr?'Drappo':'Palio'}</span>`, {eyebrow: lab||'Palio Malaspina 2026', live: !!lab, right: tipoSwitch(tipo)})}
+  ${progressHTML()}
+  ${hero}
+  <div class="standings">${rows}</div>
+  ${isDr?'<p class="hint">Drappo = punti Palio × coefficiente della contrada. Tocca il nome di una contrada per vedere le gare vinte.</p>':'<p class="hint">Tocca il nome di una contrada per vedere le competizioni vinte.</p>'}`;
 }
 
 /* ===================== VISTA: GRAFICI ===================== */
-function viewGrafici(){
+function viewGrafici(lab){
   const {disp} = calcola();
+  const head = viewHead('Andamento <span class="g">gare</span>', {eyebrow: lab||'Palio Malaspina 2026', live: !!lab});
   if(disp.length===0){
-    return `<div class="card"><div class="sectionTitle"><h2>Grafici</h2></div>
-      <p class="muted">Nessuna gara disputata: inserisci almeno un risultato nella scheda <b>Gare</b> per vedere l'andamento.</p></div>`;
+    return `${head}<div class="card"><p class="muted">Nessuna gara disputata: inserisci almeno un risultato nella scheda <b>Gare</b> per vedere l'andamento.</p></div>`;
   }
   const legend = `<div class="legend">${state.contrade.map(c=>
-     `<span><i style="background:linear-gradient(90deg,${c.c1},${c.c2})"></i>${esc(c.nome)}</span>`).join('')}</div>`;
-  return `
+     `<span style="${cVars(c)}"><i></i>${esc(c.nome)}</span>`).join('')}</div>`;
+  return `${head}
   <div class="card chart-card">
-    <div class="sectionTitle"><h2>Andamento Palio</h2></div>
-    <div id="chartPalio"></div>${legend}
+    <div class="sectionTitle"><span class="st-ic">${ic('trophy')}</span><h2>Palio</h2><span class="pill">punti cumulati</span></div>
+    <div class="chart" id="chartPalio" data-key="p"></div>${legend}
   </div>
   <div class="card chart-card">
-    <div class="sectionTitle"><h2>Andamento Drappo</h2></div>
-    <div id="chartDrappo"></div>${legend}
-  </div>`;
+    <div class="sectionTitle"><span class="st-ic">${ic('flag')}</span><h2>Drappo</h2><span class="pill">punti × coefficiente</span></div>
+    <div class="chart" id="chartDrappo" data-key="d"></div>${legend}
+  </div>
+  <p class="hint">Passa il dito o il mouse sul grafico per vedere i punti dopo ogni gara.</p>`;
 }
+const _charts = {};   // geometria dei grafici disegnati (serve al tooltip)
 function drawCharts(){
   const {disp,palio,drappo} = calcola();
   if(disp.length===0) return;
-  const labels = disp.map((g,i)=>`${i+1}. ${g.sport}${g.categoria?(' '+g.categoria):''}`);
+  const labels = disp.map(g=>`${g.sport}${g.categoria?(' '+g.categoria):''}`);
   const mk = c => ({id:c.id, nome:c.nome, color:c.chart, c1:c.c1, c2:c.c2});
   const seriesP = state.contrade.map(c=>({...mk(c), data:palio[c.id]}));
   const seriesD = state.contrade.map(c=>({...mk(c), data:drappo[c.id]}));
   const ep = document.getElementById('chartPalio');
   const ed = document.getElementById('chartDrappo');
-  if(ep) ep.innerHTML = lineChartSVG(seriesP, labels, false, 'p');
-  if(ed) ed.innerHTML = lineChartSVG(seriesD, labels, true, 'd');
+  if(ep) buildChart(ep, seriesP, labels, false, 'p');
+  if(ed) buildChart(ed, seriesD, labels, true, 'd');
 }
-function lineChartSVG(series, labels, decimals, key){
-  const W=820, H=380, pad={l:48,r:18,t:18,b:64};
-  key = key||'c';
-  // gradienti per contrada: i due colori si mischiano lungo la linea
+// schiarisce i colori troppo scuri per leggerli su fondo nero
+function lift(hex){
+  const l = lum(hex);
+  if(l >= .14) return hex;
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return hex;
+  const n = parseInt(m[1],16), t = .45;
+  const mix = v => Math.round(v + (255-v)*t).toString(16).padStart(2,'0');
+  return '#'+mix(n>>16&255)+mix(n>>8&255)+mix(n&255);
+}
+function buildChart(el, series, labels, decimals, key){
+  const W = Math.max(300, Math.round(el.clientWidth) || 820);
+  const g = lineChartSVG(series, labels, decimals, key, W);
+  _charts[key] = g.geo;
+  el.innerHTML = g.svg + '<div class="tt" aria-hidden="true"></div>';
+}
+function lineChartSVG(series, labels, decimals, key, W){
+  const small = W < 560;
+  const H = small ? 300 : 380;
+  const pad = {l: small?36:46, r: small?(decimals?92:84):(decimals?140:118), t:18, b:34};
+  const fmt = v => decimals ? fmtD(v) : fmtP(v);
+  // gradienti per contrada: i due colori si mischiano lungo la linea (coordinate assolute: reggono anche le linee piatte)
   const defs = '<defs>'+series.map(s=>
-    `<linearGradient id="ln_${key}_${s.id}" x1="0" y1="0" x2="1" y2="0">
-       <stop offset="0%" stop-color="${s.c1}"/><stop offset="100%" stop-color="${s.c2}"/></linearGradient>`
+    `<linearGradient id="ln_${key}_${s.id}" gradientUnits="userSpaceOnUse" x1="${pad.l}" y1="0" x2="${W-pad.r}" y2="0">
+       <stop offset="0%" stop-color="${lift(s.c1)}"/><stop offset="100%" stop-color="${lift(s.c2)}"/></linearGradient>`
   ).join('')+'</defs>';
   const n = labels.length;
   const allMax = Math.max(1, ...series.flatMap(s=>s.data));
-  // scala "carina" per l'asse Y
-  const step = niceStep(allMax/5);
+  const step = niceStep(allMax/(small?4:5));
   const yMax = Math.ceil(allMax/step)*step || step;
   const xOf = i => pad.l + (n<=1 ? (W-pad.l-pad.r)/2 : (i/(n-1))*(W-pad.l-pad.r));
   const yOf = v => H-pad.b - (v/yMax)*(H-pad.t-pad.b);
-  let g='';
+  let s='';
   // griglia + etichette Y
   for(let v=0; v<=yMax+1e-9; v+=step){
     const y=yOf(v);
-    g+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#30363d" stroke-width="1"/>`;
-    g+=`<text x="${pad.l-6}" y="${(y+4).toFixed(1)}" fill="#8b949e" font-size="11" text-anchor="end">${decimals?fmtD(v):fmtP(v)}</text>`;
+    s+=`<line class="gl" x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}"/>`;
+    s+=`<text class="ax" x="${pad.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${Number.isInteger(step) ? fmtP(v) : fmt(v)}</text>`;
   }
-  // etichette X (mostra alcune per non affollare)
-  const everyX = Math.ceil(n/10);
-  labels.forEach((lab,i)=>{
-    if(i%everyX!==0 && i!==n-1) return;
-    const x=xOf(i);
-    g+=`<text x="${x.toFixed(1)}" y="${H-pad.b+16}" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-35 ${x.toFixed(1)} ${H-pad.b+16})">${esc(String(i+1))}</text>`;
-  });
-  g+=`<line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#484f58"/>`;
-  g+=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#484f58"/>`;
-  // linee per contrada
-  series.forEach(s=>{
-    const pts = s.data.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ');
-    if(n>1) g+=`<polyline points="${pts}" fill="none" stroke="url(#ln_${key}_${s.id})" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
-    s.data.forEach((v,i)=>{
-      g+=`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(v).toFixed(1)}" r="${n>30?2.5:3.6}" fill="${s.color}" stroke="#0d1117" stroke-width="0.8">
-        <title>${esc(s.nome)} — dopo ${esc(labels[i])}: ${decimals?fmtD(v):fmtP(v)}</title></circle>`;
+  // etichette X: numero della gara, distanziate quanto basta
+  const plotW = W-pad.l-pad.r;
+  const everyX = Math.max(1, Math.ceil(n/Math.max(2, Math.floor(plotW/30))));
+  for(let i=0;i<n;i++){
+    if(i%everyX!==0 && i!==n-1) continue;
+    s+=`<text class="ax" x="${xOf(i).toFixed(1)}" y="${H-pad.b+20}" text-anchor="middle">${i+1}</text>`;
+  }
+  // linee per contrada: alone + tratto
+  series.forEach(se=>{
+    const pts = se.data.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ');
+    if(n>1){
+      s+=`<polyline points="${pts}" fill="none" stroke="${lift(se.color)}" stroke-opacity=".16" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>`;
+      s+=`<polyline points="${pts}" fill="none" stroke="url(#ln_${key}_${se.id})" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    }
+    if(n<=24) se.data.forEach((v,i)=>{
+      if(i===n-1) return;
+      s+=`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(v).toFixed(1)}" r="2.6" fill="${lift(se.color)}"/>`;
     });
   });
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">${defs}${g}</svg>`;
+  // etichette dirette a fine linea (distanziate per non sovrapporsi)
+  const gap = 15;
+  const ends = series.map(se=>({se, y0:yOf(se.data[n-1]), y:yOf(se.data[n-1])})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<gap) ends[i].y = ends[i-1].y+gap;
+  for(let i=ends.length-1;i>=0;i--){ const lim = i===ends.length-1 ? H-pad.b+4 : ends[i+1].y-gap; if(ends[i].y>lim) ends[i].y=lim; }
+  const xe = xOf(n-1);
+  ends.forEach(({se,y0,y})=>{
+    const col = lift(se.color);
+    if(Math.abs(y-y0)>1) s+=`<line x1="${(xe+5).toFixed(1)}" y1="${y0.toFixed(1)}" x2="${(xe+11).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${col}" stroke-opacity=".6"/>`;
+    s+=`<circle cx="${xe.toFixed(1)}" cy="${y0.toFixed(1)}" r="5" fill="${col}" stroke="#05070c" stroke-width="2"/>`;
+    s+=`<text class="el${small?' sm':''}" x="${(xe+14).toFixed(1)}" y="${(y+4).toFixed(1)}" fill="${col}">${esc(se.nome.toUpperCase())}${small?'':`<tspan class="ev" dx="6">${fmt(se.data[n-1])}</tspan>`}</text>`;
+  });
+  // elementi del cursore (si muovono con il puntatore)
+  s+=`<g class="cur"><line class="xh" x1="0" x2="0" y1="${pad.t}" y2="${H-pad.b}"/>`+
+     series.map(se=>`<circle class="hd" r="5.5" cx="0" cy="0" fill="${lift(se.color)}" stroke="#05070c" stroke-width="2"/>`).join('')+`</g>`;
+  s+=`<rect class="hit" x="${pad.l}" y="${pad.t}" width="${plotW}" height="${H-pad.t-pad.b}" fill="transparent"/>`;
+  return {
+    svg: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Andamento dei punti dopo ogni gara">${defs}${s}</svg>`,
+    geo: {W,H,pad,n,series,labels,decimals,xOf,yOf}
+  };
 }
 function niceStep(x){
   if(x<=0) return 1;
@@ -1217,6 +1759,33 @@ function niceStep(x){
   const f=x/p;
   return (f<=1?1:f<=2?2:f<=5?5:10)*p;
 }
+// cursore + tooltip sui grafici (mouse e touch)
+function chartPointer(e){
+  const host = e.target && e.target.closest ? e.target.closest('.chart') : null;
+  document.querySelectorAll('.chart.hv').forEach(h=>{ if(h!==host) h.classList.remove('hv'); });
+  if(!host) return;
+  const C = _charts[host.dataset.key], svg = host.querySelector('svg'), tt = host.querySelector('.tt');
+  if(!C || !svg || !tt) return;
+  const r = svg.getBoundingClientRect();
+  const x = (e.clientX - r.left) * (C.W / r.width);
+  const span = C.W - C.pad.l - C.pad.r;
+  let i = C.n<=1 ? 0 : Math.round((x - C.pad.l)/span*(C.n-1));
+  i = Math.max(0, Math.min(C.n-1, i));
+  const gx = C.xOf(i);
+  const xh = svg.querySelector('.xh');
+  xh.setAttribute('x1', gx); xh.setAttribute('x2', gx);
+  svg.querySelectorAll('.hd').forEach((c,k)=>{ c.setAttribute('cx', gx); c.setAttribute('cy', C.yOf(C.series[k].data[i])); });
+  const fmt = v => C.decimals ? fmtD(v) : fmtP(v);
+  const rows = C.series.map(s=>({s, v:s.data[i]})).sort((a,b)=>b.v-a.v);
+  tt.innerHTML = `<div class="tt-h"><b>${i+1}</b><span>${esc(C.labels[i])}</span></div>` +
+    rows.map(({s,v})=>`<div class="tt-r" style="--cc:${lift(s.color)}"><i></i><span>${esc(s.nome)}</span><b>${fmt(v)}</b></div>`).join('');
+  host.classList.add('hv');
+  const px = gx / C.W * r.width;
+  if(px > r.width*.58){ tt.style.left='auto'; tt.style.right=(r.width-px+14)+'px'; }
+  else { tt.style.right='auto'; tt.style.left=(px+14)+'px'; }
+}
+document.addEventListener('pointermove', chartPointer);
+document.addEventListener('pointerdown', chartPointer);
 
 /* ===================== VISTA: IMPOSTAZIONI ===================== */
 // MODALITÀ DEMO: riempie tutte le gare con punteggi casuali (permutazione 1ª-5ª per gara)
@@ -1242,23 +1811,22 @@ function buildPubCard(){
   }
   const msg = (pd.message!=null) ? pd.message : DEFAULT_WAIT_MSG;
   const status = revealed
-    ? `<span class="pill" style="border-color:var(--success);color:var(--success)">🟢 Pubblicate${pd.at?(' · '+fmtTime(pd.at)):''}</span>`
-    : `<span class="pill" style="border-color:var(--warn);color:var(--warn)">🙈 Nascoste</span>`;
+    ? `<span class="pill ok"><i class="dot"></i>Pubblicate${pd.at?(' · '+fmtTime(pd.at)):''}</span>`
+    : `<span class="pill warn">${ic('eyeoff')}Nascoste</span>`;
   const changedNote = changed
-    ? `<div class="banner">⚠ Ci sono modifiche <b>non ancora pubblicate</b>: il pubblico vede la classifica precedente. Premi "Pubblica" per aggiornarla.</div>` : '';
-  const inp = 'width:100%;max-width:520px;background:var(--bg-1);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px';
+    ? `<div class="banner">${ic('alert')}<span>Ci sono modifiche <b>non ancora pubblicate</b>: il pubblico vede la classifica precedente. Premi "Pubblica" per aggiornarla.</span></div>` : '';
   return `<div class="card">
     <div class="sectionTitle"><h2>Pubblicazione classifiche (pubblico)</h2> ${status}</div>
     ${changedNote}
     <p class="hint">Il pubblico <b>non</b> vede i risultati in tempo reale. Quando premi <b>Pubblica</b>, vede una <b>fotografia</b> delle classifiche di quel momento; le modifiche successive restano private finché non pubblichi di nuovo.</p>
-    <div class="row" style="margin:12px 0">
-      <button class="btn gold" data-action="pub-reveal">📢 Pubblica classifiche ora</button>
-      <button class="btn" data-action="pub-hide">🙈 Nascondi (mostra messaggio)</button>
+    <div class="row" style="margin:14px 0">
+      <button class="btn gold" data-action="pub-reveal">${ic('megaphone')} Pubblica classifiche ora</button>
+      <button class="btn" data-action="pub-hide">${ic('eyeoff')} Nascondi (mostra messaggio)</button>
     </div>
-    <label class="hint" style="display:block;margin-top:6px">Etichetta sopra la classifica pubblicata (es. "Classifica dopo la 1ª giornata"):</label>
-    <input data-action="pub-label" value="${esc(pd.label||'')}" placeholder="Classifica ufficiale" style="${inp};margin:5px 0 14px">
-    <label class="hint" style="display:block">Messaggio mostrato al pubblico quando le classifiche sono nascoste:</label>
-    <textarea data-action="pub-message" rows="2" style="${inp};margin-top:5px">${esc(msg)}</textarea>
+    <label class="fld"><span>Etichetta sopra la classifica pubblicata (es. "Classifica dopo la 1ª giornata"):</span>
+      <input class="w-max" data-action="pub-label" value="${esc(pd.label||'')}" placeholder="Classifica ufficiale"></label>
+    <label class="fld"><span>Messaggio mostrato al pubblico quando le classifiche sono nascoste:</span>
+      <textarea class="w-max" data-action="pub-message" rows="2">${esc(msg)}</textarea></label>
   </div>`;
 }
 
@@ -1266,83 +1834,84 @@ function viewConfig(){
   const C = state.contrade;
   const pubCard = buildPubCard();
   const annCard = buildAnnCard();
-  const contRows = C.map(c=>`<tr>
-    <td><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}" ${ED()}></td>
-    <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}" ${ED()}></td>
-    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c1" value="${c.c1}" ${ED()}></td>
-    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c2" value="${c.c2}" ${ED()}></td>
-    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="chart" value="${c.chart}" ${ED()}></td>
+  const contRows = C.map(c=>`<tr style="${cVars(c)}">
+    <td class="cn"><i class="flag"></i><input data-action="cfg-cont" data-cid="${c.id}" data-f="nome" value="${esc(c.nome)}" aria-label="Nome contrada" ${ED()}></td>
+    <td><input class="num" data-action="cfg-cont" data-cid="${c.id}" data-f="coeff" value="${esc(String(c.coeff))}" aria-label="Coefficiente ${esc(c.nome)}" ${ED()}></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c1" value="${c.c1}" aria-label="Colore 1 ${esc(c.nome)}" ${ED()}></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="c2" value="${c.c2}" aria-label="Colore 2 ${esc(c.nome)}" ${ED()}></td>
+    <td><input type="color" data-action="cfg-cont" data-cid="${c.id}" data-f="chart" value="${c.chart}" aria-label="Colore grafico ${esc(c.nome)}" ${ED()}></td>
   </tr>`).join('');
 
   const head = TIPI.map(t=>`<th>${t}</th>`).join('');
   const pun128 = [1,2,3,4,5].map(pos=>{
-    const cells = TIPI.map(t=>`<td><input class="num" data-action="cfg-punti" data-tipo="${t}" data-idx="${pos-1}" value="${esc(String(state.tabellaPunti[t][pos-1]))}" ${ED()}></td>`).join('');
+    const cells = TIPI.map(t=>`<td><input class="num" data-action="cfg-punti" data-tipo="${t}" data-idx="${pos-1}" value="${esc(String(state.tabellaPunti[t][pos-1]))}" aria-label="${t}, ${pos}ª posizione" ${ED()}></td>`).join('');
     return `<tr><th>${pos}ª</th>${cells}</tr>`;
   }).join('');
 
   const gareRows = state.gare.map((g,i)=>{
     const tipoSel = TIPI.map(t=>`<option ${g.tipo===t?'selected':''}>${t}</option>`).join('');
     const actions = canEdit() ? `<div class="ge-actions row" style="gap:4px">
-        <button class="iconbtn" data-action="gara-up" data-gid="${g.id}" title="Su">▲</button>
-        <button class="iconbtn" data-action="gara-down" data-gid="${g.id}" title="Giù">▼</button>
-        <button class="iconbtn" data-action="gara-del" data-gid="${g.id}" title="Elimina">🗑</button>
+        <button class="iconbtn" data-action="gara-up" data-gid="${g.id}" title="Su" aria-label="Sposta su">${ic('up')}</button>
+        <button class="iconbtn" data-action="gara-down" data-gid="${g.id}" title="Giù" aria-label="Sposta giù">${ic('down')}</button>
+        <button class="iconbtn del" data-action="gara-del" data-gid="${g.id}" title="Elimina" aria-label="Elimina gara">${ic('trash')}</button>
       </div>` : '<div></div>';
     return `<div class="ge-row" data-gid="${g.id}">
       <div class="ge-num">${i+1}</div>
-      <input data-action="cfg-gara" data-gid="${g.id}" data-f="sport" value="${esc(g.sport)}" placeholder="Sport" ${ED()}>
-      <input data-action="cfg-gara" data-gid="${g.id}" data-f="categoria" value="${esc(g.categoria)}" placeholder="Categoria" ${ED()}>
-      <select class="ge-tipo" data-action="cfg-gara" data-gid="${g.id}" data-f="tipo" ${ED()}>${tipoSel}</select>
+      <input data-action="cfg-gara" data-gid="${g.id}" data-f="sport" value="${esc(g.sport)}" placeholder="Sport" aria-label="Sport" ${ED()}>
+      <input data-action="cfg-gara" data-gid="${g.id}" data-f="categoria" value="${esc(g.categoria)}" placeholder="Categoria" aria-label="Categoria" ${ED()}>
+      <select class="ge-tipo" data-action="cfg-gara" data-gid="${g.id}" data-f="tipo" aria-label="Tipo di punteggio" ${ED()}>${tipoSel}</select>
       ${actions}
     </div>`;
   }).join('');
 
   return `
+  ${viewHead('<span class="g">Impostazioni</span>', {eyebrow:'Pannello organizzatore'})}
   ${pubCard}
   ${annCard}
   <div class="grid2">
     <div class="card">
       <div class="sectionTitle"><h2>Contrade &amp; Coefficienti</h2></div>
-      <table class="cfg">
+      <div class="tbl-scroll"><table class="cfg">
         <thead><tr><th>Nome</th><th>Coeff.</th><th>Colore 1</th><th>Colore 2</th><th>Grafico</th></tr></thead>
         <tbody>${contRows}</tbody>
-      </table>
+      </table></div>
       <p class="hint">Drappo = Palio × coefficiente. Il colore "Grafico" è quello usato nelle linee (Lago usa l'azzurro per distinguersi da Sagittario).</p>
     </div>
     <div class="card">
       <div class="sectionTitle"><h2>Tabella Punti</h2></div>
-      <table class="cfg">
+      <div class="tbl-scroll"><table class="cfg">
         <thead><tr><th>Pos.</th>${head}</tr></thead>
         <tbody>${pun128}</tbody>
-      </table>
+      </table></div>
       <p class="hint">Punti assegnati per posizione e tipo. Punti 5/4/3 = n. contrade partecipanti; B = Burraco; T = Gara torte.</p>
     </div>
   </div>
 
   <div class="card gare-edit">
     <div class="sectionTitle"><h2>Elenco Gare</h2>
-      ${canEdit()?'<button class="btn sm gold" data-action="gara-add">+ Aggiungi gara</button>':''}</div>
-    <div class="ge-row" style="font-weight:700;color:var(--text-dim)">
+      ${canEdit()?`<button class="btn sm gold" data-action="gara-add">${ic('plus')} Aggiungi gara</button>`:''}</div>
+    <div class="ge-row ge-head">
       <div class="ge-num">#</div><div>Sport</div><div>Categoria</div><div>Tipo</div><div>Azioni</div></div>
     ${gareRows}
-    <p class="hint">L'ordine è quello cronologico usato nei cumulativi e nei grafici. Riordina con ▲▼.</p>
+    <p class="hint">L'ordine è quello cronologico usato nei cumulativi e nei grafici. Riordina con le frecce.</p>
   </div>
 
   <div class="card">
     <div class="sectionTitle"><h2>Dati: Backup &amp; Ripristino</h2></div>
     <div class="row">
-      <button class="btn gold" data-action="export-json">⬇ Esporta JSON (backup)</button>
-      <button class="btn" data-action="export-csv">⬇ Esporta CSV (Excel)</button>
-      ${canEdit()?'<button class="btn" data-action="import-json">⬆ Importa JSON</button>':''}
-      ${canEdit()?'<button class="btn danger" data-action="reset-all">↺ Ripristina valori predefiniti</button>':''}
+      <button class="btn gold" data-action="export-json">${ic('download')} Esporta JSON (backup)</button>
+      <button class="btn" data-action="export-csv">${ic('download')} Esporta CSV (Excel)</button>
+      ${canEdit()?`<button class="btn" data-action="import-json">${ic('upload')} Importa JSON</button>`:''}
+      ${canEdit()?`<button class="btn danger" data-action="reset-all">${ic('reset')} Ripristina valori predefiniti</button>`:''}
     </div>
     <p class="hint">Il salvataggio è automatico in questo browser. Usa <b>Esporta JSON</b> per un backup completo o per spostare i dati su un altro dispositivo.
       Il <b>CSV</b> si apre direttamente in Excel (separatore «;», decimali con la virgola).</p>
   </div>
 
-  ${canEdit() ? `<div class="card">
-    <div class="sectionTitle"><h2>🎲 Modalità demo</h2></div>
-    <p class="hint">Riempie <b>tutte</b> le gare con punteggi <b>casuali</b>, all'istante — utile per provare l'app, i grafici e la presentazione. ⚠️ <b>Sovrascrive</b> i risultati attuali. Protetta da PIN.</p>
-    <button class="btn" data-action="demo-fill">🎲 Riempi tutto a caso (demo)</button>
+  ${canEdit() ? `<div class="card demo">
+    <div class="sectionTitle"><h2>Modalità demo</h2><span class="pill warn">${ic('alert')}Sovrascrive i risultati</span></div>
+    <p class="hint">Riempie <b>tutte</b> le gare con punteggi <b>casuali</b>, all'istante — utile per provare l'app, i grafici e la presentazione. <b>Sovrascrive</b> i risultati attuali. Protetta da PIN.</p>
+    <button class="btn" data-action="demo-fill">${ic('dice')} Riempi tutto a caso (demo)</button>
   </div>` : ''}`;
 }
 
@@ -1351,37 +1920,43 @@ let presentMode = 'palio';
 function openPresent(){
   document.getElementById('present').classList.add('on');
   renderPresent();
-  if(document.documentElement.requestFullscreen){ try{ document.documentElement.requestFullscreen(); }catch(e){} }
+  if(document.documentElement.requestFullscreen){ try{ const p = document.documentElement.requestFullscreen(); if(p && p.catch) p.catch(()=>{}); }catch(e){} }
 }
 function closePresent(){
   document.getElementById('present').classList.remove('on');
-  if(document.fullscreenElement && document.exitFullscreen){ try{ document.exitFullscreen(); }catch(e){} }
+  if(document.fullscreenElement && document.exitFullscreen){ try{ const p = document.exitFullscreen(); if(p && p.catch) p.catch(()=>{}); }catch(e){} }
 }
 function renderPresent(){
   const tipo = presentMode;
-  document.getElementById('presTitle').textContent = tipo==='drappo'?'Classifica Drappo':'Classifica Palio';
-  document.getElementById('pmPalio').className = 'btn'+(tipo==='palio'?' gold':'');
-  document.getElementById('pmDrappo').className = 'btn'+(tipo==='drappo'?' gold':'');
-  const arr = classifica(tipo);
   const isDr = tipo==='drappo';
+  document.getElementById('presTitle').innerHTML = `Classifica <span class="g${isDr?' s':''}">${isDr?'Drappo':'Palio'}</span>`;
+  document.getElementById('pmPalio').className = 'seg-b'+(tipo==='palio'?' on':'');
+  document.getElementById('pmDrappo').className = 'seg-b'+(isDr?' on':'');
+  const arr = classifica(tipo);
+  const started = calcola().disp.length > 0;
   const fv = e => isDr?fmtD(e.val):fmtP(e.val);
-  // podio (primi 3 per posizione)
+  const max = Math.max(1, ...arr.map(e=>e.val));
+  // podio (primi 3 per posizione), disposto 2 - 1 - 3
   const top3 = arr.filter(e=>e.rank<=3);
   const byRank = r => top3.filter(e=>e.rank===r);
-  const podBlock = (e, h, label) => `<div class="pcol">
-      <div class="pname" style="color:${e.c.chart}">${esc(e.c.nome)}</div>
+  const hMap = {1:34, 2:25, 3:18};   // altezza dei gradini in vh
+  const podBlock = e => {
+    const k = inkSpan(e.c.c1, e.c.c2, 0, .4);
+    return `<div class="pcol r${e.rank}" style="${cVars(e.c)}">
       <div class="pscore">${fv(e)}</div>
-      <div class="block" style="height:${h}px;background:linear-gradient(180deg,${e.c.c1},${e.c.c2})">${label}</div></div>`;
-  const ord = [].concat(byRank(2), byRank(1), byRank(3)); // 2 - 1 - 3
-  const hMap = {1:150,2:110,3:80};
-  const podium = `<div class="podium">${ord.map(e=>podBlock(e,hMap[e.rank],e.rank)).join('')}</div>`;
+      <div class="pname">${esc(e.c.nome)}</div>
+      <div class="block" style="height:${hMap[e.rank]}vh;--hg:${e.c.c1},${e.c.c2};--hink:${k.fg}"><b>${e.rank}</b></div></div>`;
+  };
+  const ord = [].concat(byRank(2), byRank(1), byRank(3));
+  const podium = started ? `<div class="podium">${ord.map(podBlock).join('')}</div>` : '';
   const big = `<div class="bigstand">${arr.map(e=>`
-    <div class="br" style="--cc:${e.c.chart}">
-      <div class="r">${e.rank}${medal(e.rank)}</div>
-      <div class="n" style="color:${e.c.chart}">${esc(e.c.nome)}</div>
+    <div class="br p${Math.min(e.rank,4)}" style="${cVars(e.c)}">
+      <div class="r">${e.rank}</div>
+      <div class="n"><span>${esc(e.c.nome)}</span><div class="meter"><i style="width:${started?Math.max(3,e.val/max*100).toFixed(1):0}%"></i></div></div>
       <div class="t">${fv(e)}</div>
     </div>`).join('')}</div>`;
-  document.getElementById('presBody').innerHTML = podium + big;
+  document.getElementById('presBody').innerHTML =
+    `<div class="pr-grid${started?'':' solo'}">${podium}${big}</div><div class="pr-foot">${progressHTML()}</div>`;
 }
 
 /* ===================== EXPORT / IMPORT ===================== */
@@ -1442,9 +2017,9 @@ function handleImport(file){
       const s = migrate(JSON.parse(e.target.result));
       if(!s) throw new Error('formato non valido');
       state = s; save(); render();
-      alert('Dati importati correttamente.');
+      toast('Dati importati correttamente');
     }catch(err){
-      alert('File non valido: '+err.message);
+      toast('File non valido: '+err.message, 'err');
     }
   };
   r.readAsText(file);
@@ -1471,19 +2046,19 @@ document.addEventListener('click', e=>{
     case 'cwin-close': closeCwin(); break;
     case 'copy-iban':
       copyText(DON_IBAN).then(()=>{
-        t.textContent='✓ IBAN copiato!';
+        t.innerHTML = ic('check')+' IBAN copiato!';
       }).catch(()=>{
-        t.textContent='⚠ Copia manualmente l\'IBAN qui sopra';
+        t.innerHTML = ic('alert')+' Copia manualmente l\'IBAN qui sopra';
         const el=document.querySelector('.iban');
         if(el && window.getSelection){ const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
-      }).finally(()=>{ setTimeout(()=>{ t.textContent='📋 Copia IBAN'; }, 2200); });
+      }).finally(()=>{ setTimeout(()=>{ t.innerHTML = ic('copy')+' Copia IBAN'; }, 2200); });
       break;
     case 'pub-reveal': {
       const pin = prompt('Inserisci il PIN per PUBBLICARE le classifiche al pubblico:');
       if(pin==null) break;
       if(pin.trim() !== REVEAL_PIN){ alert('PIN errato. Pubblicazione annullata.'); break; }
       publishReveal();
-      alert('Classifiche pubblicate al pubblico ✓');
+      toast('Classifiche pubblicate al pubblico');
       break;
     }
     case 'pub-hide':
@@ -1599,6 +2174,10 @@ document.getElementById('importFile').addEventListener('change', function(){
 // scorciatoie presentazione
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){ closePresent(); closeDonate(); closeCwin(); }
+  // i riquadri cliccabili (div role="button") rispondono anche a Invio e Spazio
+  if((e.key==='Enter' || e.key===' ') && e.target && e.target.matches && e.target.matches('[role="button"][data-action]')){
+    e.preventDefault(); e.target.click();
+  }
 });
 // click sullo sfondo scuro chiude le finestre
 document.getElementById('donate').addEventListener('click', function(e){ if(e.target===this) closeDonate(); });
@@ -1608,7 +2187,10 @@ document.getElementById('cwin').addEventListener('click', function(e){ if(e.targ
 let _wasMobile = isMobile(), _resizeT = null;
 window.addEventListener('resize', ()=>{
   clearTimeout(_resizeT);
-  _resizeT = setTimeout(()=>{ if(isMobile()!==_wasMobile){ _wasMobile=isMobile(); render(); } }, 200);
+  _resizeT = setTimeout(()=>{
+    if(isMobile()!==_wasMobile){ _wasMobile=isMobile(); render(); }
+    else if(current==='grafici' && document.getElementById('chartPalio')) drawCharts();   // i grafici seguono la larghezza
+  }, 200);
 });
 
 /* ===================== AUTOTEST (console) ===================== */
