@@ -34,5 +34,18 @@ Stile sportivo sobrio: fondo notte, colori pieni delle contrade e linee oblique 
 - Font di sistema (nessun webfont): condensed su iPhone/Mac (Avenir Next Condensed), con ripiego su Bahnschrift, Roboto Condensed e Arial Narrow.
 - Colori e componenti sono definiti nel blocco `<style>` all'inizio di `index.html` (variabili `--gold`, `--silver`, `--ink-*`…); le icone sono SVG a tratto nella costante `ICONS`.
 
+## Stato e dove si riprende (16 ottobre 2026)
+- **Online** su www.paliomalaspina.com: grafica sobria (fondo notte, oro = Palio, argento = Drappo), banner dei vincitori solo in home, scheda «Contrade». Ultimo commit pubblicato: `39a6cc0`.
+- **Contenuto**: approvato. Mancano solo i testi delle contrade (motto e storia) da mettere in `STORIE`; non vanno inventati.
+- **Grafica in revisione**: quella attuale non convince del tutto. Sono state disegnate in Figma cinque proposte con i dati reali della classifica finale ([file Figma](https://www.figma.com/design/9pXljb2kpZv3aHXL2bK0Mq), account studenti): **A Pergamena e blasoni** (scartata: medievale), **B Festa di quartiere**, **C Cronaca del Palio** (quotidiano sportivo), **D Minimal chiaro**, **E Retrò olimpico**. Ognuna ha Home desktop, due telefoni (classifica e contrade), pagina di una contrada (Giardini) e tavola di stile. Sono mockup, non codice.
+- **Prossimo passo**: scegliere le proposte preferite (anche mischiando idee), applicarle a `index.html` e aggiornare la sezione «Grafica» di questo file.
+- Nelle proposte c'è solo la classifica Palio (il selettore Palio | Drappo è disegnato, la schermata Drappo no): da disegnare se serve.
+
+## Pubblicazione
+Il push su `main` pubblica subito il sito (GitHub Actions → Azure Static Web Apps). I dati live stanno in Firebase Realtime Database: il pubblico vede le classifiche solo quando l'admin preme «Pubblica classifiche ora» (con PIN di conferma). Per questo le prove vanno fatte come sotto, senza toccare il database vero.
+
+## Provare senza toccare il database vero
+Esiste una cartella locale **non versionata**, `.claude/prove/` (solo sul computer di chi sviluppa). `python3 .claude/prove/mk_test.py` crea una copia di `index.html` con un Firebase finto (`stub.js`) in `.claude/prove/t/`; servita su una porta locale si apre con `index.html?mode=revealed|wait|announce|admin|loading|local` (e `&n=<gare disputate>`). In modalità `admin` qualsiasi password entra e nessuna scrittura arriva al database. La pagina vera col database vero va aperta solo da visitatore (sola lettura).
+
 ## Tecnologia
 Vanilla HTML + CSS + JavaScript in un unico file. Unica dipendenza esterna: Firebase (sincronizzazione condivisa); senza rete l'app resta utilizzabile in locale.
