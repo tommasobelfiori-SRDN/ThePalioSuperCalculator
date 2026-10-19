@@ -1178,6 +1178,8 @@ function classifica(tipo){
 /* ===================== FORMATTAZIONE ===================== */
 const fmtP = n => String(Math.round(n));
 const fmtD = n => (Math.round(n*100)/100).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+// i coefficienti non sono pubblici: li vede solo chi gestisce (admin o uso locale)
+const showCoeff = () => !(cloudOn && !isAdmin);
 const fmtCoeff = n => n.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
@@ -1695,7 +1697,7 @@ function viewContrada(c, showResults){
         <div class="stat"><b>${vinte.length}</b><span>Gare vinte</span></div>
         <div class="stat"><b>${podi}</b><span>Podi</span></div>
         <div class="stat"><b>${disputate}</b><span>Gare disputate</span></div>
-        <div class="stat"><b>×${fmtCoeff(c.coeff)}</b><span>Coefficiente</span></div>
+        ${showCoeff()?`<div class="stat"><b>×${fmtCoeff(c.coeff)}</b><span>Coefficiente</span></div>`:''}
       </div>
       <p class="wins-h">Gare vinte</p>
       <div class="wins">${gareVinte}</div>
@@ -1907,7 +1909,7 @@ function viewClassifica(tipo, lab){
           ${started && e.rank===1 ? '<span class="pill gold">In testa</span>' : ''}
         </div>
         <div class="meter"><i style="width:${pct.toFixed(1)}%"></i></div>
-        ${isDr?`<div class="sub">coeff. ${fmtCoeff(e.c.coeff)}</div>`:''}
+        ${isDr && showCoeff()?`<div class="sub">coeff. ${fmtCoeff(e.c.coeff)}</div>`:''}
       </div>
       <div class="sc"><b class="tot">${fv(e.val)}</b><span class="gap">${gap}</span></div>
     </div>`;
@@ -1915,7 +1917,7 @@ function viewClassifica(tipo, lab){
 
   return `${viewHead(`Classifica <span class="g${isDr?' s':''}">${isDr?'Drappo':'Palio'}</span>`, {eyebrow: lab||'Palio Malaspina 2026', live: !!lab, right: tipoSwitch(tipo)})}
   <div class="cl-grid">${hero}${progressHTML()}<div class="standings">${rows}</div></div>
-  ${isDr?'<p class="hint">Drappo = punti Palio × coefficiente della contrada. Tocca il nome di una contrada per vedere le gare vinte.</p>':'<p class="hint">Tocca il nome di una contrada per vedere le competizioni vinte.</p>'}`;
+  ${isDr && showCoeff()?'<p class="hint">Drappo = punti Palio × coefficiente della contrada. Tocca il nome di una contrada per vedere le gare vinte.</p>':'<p class="hint">Tocca il nome di una contrada per vedere le competizioni vinte.</p>'}`;
 }
 
 /* ===================== VISTA: GRAFICI ===================== */
@@ -1933,7 +1935,7 @@ function viewGrafici(lab){
     <div class="chart" id="chartPalio" data-key="p"></div>${legend}
   </div>
   <div class="card chart-card">
-    <div class="sectionTitle"><span class="st-ic">${ic('flag')}</span><h2>Drappo</h2><span class="pill">punti × coefficiente</span></div>
+    <div class="sectionTitle"><span class="st-ic">${ic('flag')}</span><h2>Drappo</h2><span class="pill">${showCoeff()?'punti × coefficiente':'punteggio Drappo'}</span></div>
     <div class="chart" id="chartDrappo" data-key="d"></div>${legend}
   </div>
   <p class="hint">Passa il dito o il mouse sul grafico per vedere i punti dopo ogni gara.</p>`;
