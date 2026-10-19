@@ -25,21 +25,19 @@ giardini: {motto:'Una frase breve', storia:['Primo paragrafo.', 'Secondo paragra
 ```
 
 ## Grafica
-Stile sportivo sobrio: fondo notte, colori pieni delle contrade e linee oblique come le cinque aste del logo Gruppo Palio.
-- **Oro = Palio, argento = Drappo** (classifiche, titoli, albo d'oro).
-- Tipografia misurata: caratteri dritti (pesi 600–700), titoli fino a circa 2,2 rem, maiuscolo solo per le micro-etichette.
-- La striscia «in testa» prende i colori della contrada che guida; il colore del testo (bianco o scuro) si sceglie da solo in base al contrasto.
-- Il **banner dei vincitori** compare solo nella home (la prima scheda), non nelle altre pagine.
+Stile **«Minimal chiaro»** (proposta D scelta il 20 ottobre 2026), con tema chiaro e tema scuro: pulito e calmo, i dati sono i protagonisti e il colore delle contrade compare solo in pallini, barre ed etichette.
+- **Oro = Palio, argento = Drappo** (selettore, etichette, titoli, albo d'oro).
+- **Tema chiaro/scuro**: all'avvio segue il dispositivo, il pulsante luna/sole in alto cambia tema e la scelta resta salvata nel browser (`palioTheme`). I colori sono variabili CSS (`--bg`, `--card`, `--text`, `--gold`…) definite in `:root` e ridefinite in `:root[data-theme="dark"]`; i grafici si ridisegnano da soli al cambio.
+- Tipografia sobria: Inter se presente, altrimenti il carattere di sistema; titoli a peso 500, numeri grandi in peso leggero (300).
+- Classifica: elenco a sinistra con barra nel colore della contrada; a destra la scheda «In testa» (striscia coi colori della contrada in testa) e l'avanzamento con una tacca per gara. Il **banner dei vincitori** compare solo nella home.
 - Su telefono la navigazione passa in una **barra a schede in basso**; le gare si inseriscono con una scheda per gara.
-- Font di sistema (nessun webfont): condensed su iPhone/Mac (Avenir Next Condensed), con ripiego su Bahnschrift, Roboto Condensed e Arial Narrow.
-- Colori e componenti sono definiti nel blocco `<style>` all'inizio di `index.html` (variabili `--gold`, `--silver`, `--ink-*`…); le icone sono SVG a tratto nella costante `ICONS`.
+- Icone SVG a tratto nella costante `ICONS`; nessun webfont.
 
-## Stato e dove si riprende (16 ottobre 2026)
-- **Online** su www.paliomalaspina.com: grafica sobria (fondo notte, oro = Palio, argento = Drappo), banner dei vincitori solo in home, scheda «Contrade». Ultimo commit pubblicato: `39a6cc0`.
+## Stato e dove si riprende (20 ottobre 2026)
+- **Online** su www.paliomalaspina.com: ancora la grafica sobria scura (ultimo commit del sito pubblicato `39a6cc0`).
+- **In lavorazione, non ancora pubblicato**: nuova grafica «Minimal chiaro» con tema chiaro e scuro (vedi «Grafica»), applicata a `index.html` partendo dalla proposta D del [file Figma](https://www.figma.com/design/9pXljb2kpZv3aHXL2bK0Mq). Le altre proposte (B, C, E) e la A (medievale) sono scartate.
 - **Contenuto**: approvato. Mancano solo i testi delle contrade (motto e storia) da mettere in `STORIE`; non vanno inventati.
-- **Grafica in revisione**: quella attuale non convince del tutto. Sono state disegnate in Figma cinque proposte con i dati reali della classifica finale ([file Figma](https://www.figma.com/design/9pXljb2kpZv3aHXL2bK0Mq), account studenti): **A Pergamena e blasoni** (scartata: medievale), **B Festa di quartiere**, **C Cronaca del Palio** (quotidiano sportivo), **D Minimal chiaro**, **E Retrò olimpico**. Ognuna ha Home desktop, due telefoni (classifica e contrade), pagina di una contrada (Giardini) e tavola di stile. Sono mockup, non codice.
-- **Prossimo passo**: scegliere le proposte preferite (anche mischiando idee), applicarle a `index.html` e aggiornare la sezione «Grafica» di questo file.
-- Nelle proposte c'è solo la classifica Palio (il selettore Palio | Drappo è disegnato, la schermata Drappo no): da disegnare se serve.
+- **Da fare**: provare su iPhone/Safari reale, poi pubblicare dopo l'ok. La schermata Drappo e l'area admin non sono disegnate in Figma: seguono lo stesso stile.
 
 ## Pubblicazione
 Il push su `main` pubblica subito il sito (GitHub Actions → Azure Static Web Apps). I dati live stanno in Firebase Realtime Database: il pubblico vede le classifiche solo quando l'admin preme «Pubblica classifiche ora» (con PIN di conferma). Per questo le prove vanno fatte come sotto, senza toccare il database vero.
