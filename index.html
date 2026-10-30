@@ -1668,8 +1668,11 @@ function viewContrada(c, showResults){
   if(s.serieP.length>1) fatti.push(['trophy', `Serie più lunga di Palii: <b>${s.serieP.length} di fila</b> (${range(s.serieP)})`]);
   if(s.serieD.length>1) fatti.push(['flag', `Serie più lunga di Drappi: <b>${s.serieD.length} di fila</b> (${range(s.serieD)})`]);
   if(s.doppiette.length) fatti.push(['medal', `${plur(s.doppiette.length,'Doppietta','Doppiette')} Palio + Drappo: <b>${s.doppiette.length}</b> (${s.doppiette.join(' · ')})`]);
-  const top = s.capitani.slice().sort((a,b)=>b.anni.length-a.anni.length)[0];
-  if(top && top.anni.length>1) fatti.push(['users', `Capitano più presente: <b>${esc(top.nome)}</b> (${top.anni.length} edizioni: ${top.anni.join(' · ')})`]);
+  // capitani con più edizioni: tutti quelli a pari record, non uno solo
+  const maxEd = Math.max(0, ...s.capitani.map(x=>x.anni.length));
+  const tops = maxEd>1 ? s.capitani.filter(x=>x.anni.length===maxEd) : [];
+  if(tops.length) fatti.push(['users', `${plur(tops.length,'Capitano più presente','Capitani più presenti')} (${maxEd} edizioni): `+
+    tops.map(x=>`<b>${esc(x.nome)}</b> (${x.anni.join(' · ')})`).join(', ')]);
   const bacheca = `<div class="card hall-p">
     <div class="sectionTitle"><span class="st-ic">${ic('trophy')}</span><h2>Bacheca</h2></div>
     <div class="bk p"><div class="bk-h"><span class="bk-k">${ic('trophy')} Palio</span><b>${nP}</b></div><div class="yrs">${anni(s.palio,'p')}</div></div>
