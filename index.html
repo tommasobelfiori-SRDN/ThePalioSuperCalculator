@@ -604,6 +604,12 @@ document.documentElement.setAttribute('data-theme',t);})();
   .ft-l{display:flex; align-items:center; gap:11px; font:500 .86rem var(--body); color:var(--text-2)}
   .ft-l .stripes{height:18px}
   #siteFooter p{font:400 .8rem var(--body); color:var(--text-3)}
+  .ft-r{display:flex; flex-direction:column; align-items:flex-end; gap:8px}
+  .ft-by{display:inline-flex; align-items:center; gap:8px; font:400 .8rem/1 var(--body); color:var(--text-3); text-decoration:none; transition:color .15s}
+  .ft-by b{font-weight:700; letter-spacing:-.01em; color:var(--text)}
+  .ft-by b i{font-style:normal; background:linear-gradient(90deg,#3d7bff,#8b5cf6 40%,#ec4899 75%,#ff7a2f); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent}
+  .ft-by .fd-mark{width:28px; height:28px; color:var(--text)}
+  .ft-by:hover span{color:var(--text-2)}
 
   /* ---------- avviso a comparsa ---------- */
   #toast{
@@ -738,6 +744,7 @@ document.documentElement.setAttribute('data-theme',t);})();
     .sb-cta{width:100%; justify-content:center}
     #toast{bottom:calc(78px + env(safe-area-inset-bottom))}
     #siteFooter{padding-bottom:26px; flex-direction:column; align-items:flex-start}
+    .ft-r{align-items:flex-start}
     .tgrid{grid-template-columns:1fr; gap:12px}
     .tcard{padding:16px 18px 16px 22px}
     .t-name{font-size:1.2rem}
@@ -786,7 +793,12 @@ document.documentElement.setAttribute('data-theme',t);})();
 
 <footer id="siteFooter">
   <div class="ft-l"><span class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span>Gruppo Palio</span></div>
-  <p>Palio Malaspina · Calcolo punteggio</p>
+  <div class="ft-r">
+    <p>Palio Malaspina · Calcolo punteggio</p>
+    <a class="ft-by" href="https://flowersdev.com" target="_blank" rel="noopener" aria-label="Powered by flowersdev">
+      <span>Powered by</span><svg class="fd-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true" focusable="false"><defs><linearGradient id="fdg" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#3D7BFF"/><stop offset=".4" stop-color="#8B5CF6"/><stop offset=".72" stop-color="#EC4899"/><stop offset="1" stop-color="#FF7A2F"/></linearGradient></defs><g fill="url(#fdg)" fill-opacity=".22" stroke="url(#fdg)" stroke-width="3.6" stroke-linejoin="round"><path d="M32 32L29.5 23.5L28.9 19.9L28.7 17.2L28.8 15.1L29 13.3L29.5 11.9L30 10.9L30.6 10.1L31.3 9.6L32 9.5L32.7 9.6L33.4 10.1L34 10.9L34.5 11.9L35 13.3L35.2 15.1L35.3 17.2L35.1 19.9L34.5 23.5L32 32Z"/><path d="M32 32L39.4 27L42.6 25.3L45 24.3L47.1 23.7L48.9 23.4L50.3 23.4L51.5 23.6L52.4 23.9L53 24.4L53.4 25L53.5 25.8L53.3 26.5L52.7 27.4L51.9 28.2L50.7 29L49.1 29.8L47.1 30.6L44.5 31.2L40.9 31.7L32 32Z"/><path d="M32 32L39 37.5L41.6 40L43.4 42L44.6 43.8L45.4 45.4L45.9 46.8L46 47.9L46 48.9L45.7 49.7L45.2 50.2L44.6 50.5L43.8 50.5L42.8 50.3L41.7 49.7L40.6 48.9L39.3 47.6L38 45.9L36.6 43.6L35 40.4L32 32Z"/><path d="M32 32L29 40.4L27.4 43.6L26 45.9L24.7 47.6L23.4 48.9L22.3 49.7L21.2 50.3L20.2 50.5L19.4 50.5L18.8 50.2L18.3 49.7L18 48.9L18 47.9L18.1 46.8L18.6 45.4L19.4 43.8L20.6 42L22.4 40L25 37.5L32 32Z"/><path d="M32 32L23.1 31.7L19.5 31.2L16.9 30.6L14.9 29.8L13.3 29L12.1 28.2L11.3 27.4L10.7 26.5L10.5 25.8L10.6 25L11 24.4L11.6 23.9L12.5 23.6L13.7 23.4L15.1 23.4L16.9 23.7L19 24.3L21.4 25.3L24.6 27L32 32Z"/></g><circle cx="32" cy="32" r="3.4" fill="currentColor"/></svg><b>flowers<i>dev</i></b>
+    </a>
+  </div>
 </footer>
 
 <!-- overlay presentazione -->
